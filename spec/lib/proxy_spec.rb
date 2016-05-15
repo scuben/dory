@@ -70,9 +70,9 @@ RSpec.describe Dory::Proxy do
     let(:expect_port) do
       ->(in_cmd:) do
         if in_cmd
-          expect(Dory::Proxy.run_cmd).to match(/-p\s+443:443/)
+          expect(Dory::Proxy.run_command).to match(/-p\s+443:443/)
         else
-          expect(Dory::Proxy.run_cmd).not_to match(/-p\s+443:443/)
+          expect(Dory::Proxy.run_command).not_to match(/-p\s+443:443/)
         end
       end
     end
@@ -109,7 +109,7 @@ RSpec.describe Dory::Proxy do
       let(:expect_not_in_cmd) do
         ->(ssl_certs_dir) do
           patch_config_ssl_certs_dir.call(ssl_certs_dir)
-          expect(Dory::Proxy.run_cmd).not_to match(/-v\s.*..etc.nginx.certs/)
+          expect(Dory::Proxy.run_command).not_to match(/-v\s.*..etc.nginx.certs/)
           expect_proxy_to_start.call()
         end
       end
@@ -117,7 +117,7 @@ RSpec.describe Dory::Proxy do
       it "mounts the ssl certs dir when it's set" do
         ssl_certs_dir = '/usr/bin'
         patch_config_ssl_certs_dir.call(ssl_certs_dir)
-        expect(Dory::Proxy.run_cmd).to match(/-v\s#{Regexp.escape(ssl_certs_dir)}..etc.nginx.certs/)
+        expect(Dory::Proxy.run_command).to match(/-v\s#{Regexp.escape(ssl_certs_dir)}..etc.nginx.certs/)
         expect_port.call(in_cmd: true)
         expect_proxy_to_start.call()
       end

@@ -2,25 +2,38 @@ require 'shellwords'
 
 module Dory
   module DockerService
-    def start
+    def run_preconditions
+      # Override if preconditions are needed
+      return true
+    end
+
+    def handle_error(command_output)
+      # Override to provide error handling
+      return false
+    end
+
+    def start(handle_error: true)
       unless self.running?
-        success = if self.container_exists?
+        self.run_preconditions
+        status = if self.container_exists?
                     if Dory::Config.debug?
                       puts "[DEBUG] Container '#{self.container_name}' already exists.  " \
                            "Starting with '#{self.start_cmd}'"
                     end
-                    Sh.run_command(self.start_cmd).success?
+                    Sh.run_command(self.start_cmd)
                   else
                     if Dory::Config.debug?
                       puts "[DEBUG] Container '#{self.container_name}' does not exist.  " \
-                           "Creating/starting with '#{self.run_cmd}'"
+                           "Creating/starting with '#{self.run_command}'"
                     end
-                    Sh.run_command(self.run_cmd).success?
+                    Sh.run_command(self.run_command)
                   end
-        unless success
-          raise RuntimeError.new(
-            "Failed to run #{self.container_name}.  Command #{self.run_cmd} failed"
-          )
+        unless status.success?
+          if !handle_error || !self.handle_error(status)
+            raise RuntimeError.new(
+              "Failed to run #{self.container_name}.  Command #{self.run_command} failed"
+            )
+          end
         end
       end
       self.running?

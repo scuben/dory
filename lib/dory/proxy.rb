@@ -33,7 +33,7 @@ module Dory
       end
     end
 
-    def self.run_cmd
+    def self.run_command
       "docker run -d -p 80:80 #{self.tls_arg} #{self.certs_arg} "\
         "-v /var/run/docker.sock:/tmp/docker.sock -e " \
         "'CONTAINER_NAME=#{Shellwords.escape(self.container_name)}' --name " \

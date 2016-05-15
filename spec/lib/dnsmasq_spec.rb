@@ -10,6 +10,18 @@ RSpec.describe Dory::Dnsmasq do
     ).split("\n").map{|s| s.sub(' ' * 6, '')}.join("\n")
   end
 
+  def start_service_on_53
+    puts "Requesting sudo to start an ncat listener on 53"
+    `sudo echo 'Got sudo. starting ncat listener'`
+    Process.spawn('sudo ncat -l 53')
+    sleep(0.5)  # give the process time to bind
+  end
+
+  def cleanup_53
+    Dory::Sh.run_command('sudo killall ncat')
+    Dory::Sh.run_command('sudo killall exe')
+  end
+
   after :all do
     Dory::Dnsmasq.delete
   end
@@ -62,5 +74,29 @@ RSpec.describe Dory::Dnsmasq do
     expect{Dory::Dnsmasq.start}.to change{Dory::Dnsmasq.running?}.from(false).to(true)
     expect(Dory::Dnsmasq).to be_container_exists
     expect(Dory::Dnsmasq).to be_running
+  end
+
+  context 'pre-existing listener on 53' do
+    let(:port) { 53 }
+
+    before(:each) { start_service_on_53 }
+    after(:each) { cleanup_53 }
+
+    it "detects listening services" do
+      expect(Dory::Dnsmasq.check_port(port).count).to eq(2)
+      Dory::Dnsmasq.check_port(port).each { |p| expect(p.command).to match(/^(ncat|exe)$/) }
+    end
+
+    it "kills listening services" do
+      expect(Dory::Dnsmasq.check_port(port)).not_to be_empty
+      expect(Dory::Dnsmasq.offer_to_kill(Dory::Dnsmasq.check_port(port), answer: 'y')).to be_truthy
+      expect(Dory::Dnsmasq.check_port(port)).to be_empty
+    end
+
+    it "doesn't kill the listening services if declined" do
+      expect(Dory::Dnsmasq.check_port(port)).not_to be_empty
+      expect(Dory::Dnsmasq.offer_to_kill(Dory::Dnsmasq.check_port(port), answer: 'n')).to be_falsey
+      expect(Dory::Dnsmasq.check_port(port)).not_to be_empty
+    end
   end
 end
