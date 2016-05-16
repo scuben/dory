@@ -79,6 +79,8 @@ RSpec.describe Dory::Dnsmasq do
   context 'pre-existing listener on 53' do
     let(:port) { 53 }
 
+    before(:all) { expect(Dory::Dnsmasq.stop).to be_truthy }
+
     before(:each) { start_service_on_53 }
     after(:each) { cleanup_53 }
 
