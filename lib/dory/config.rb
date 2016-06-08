@@ -19,8 +19,11 @@ module Dory
           # doesn't exist.
           :dnsmasq:
             :enabled: true
-            :domain: docker      # domain that will be listened for
-            :address: 127.0.0.1  # address returned for queries against domain
+            :domains:              # array of domains that will be resolved to the specified address
+              - domain: docker     # you can set '#' for a wilcard
+                address: 127.0.0.1 # return for queries against the domain
+              - domain: dev
+                address: 127.0.0.1
             :container_name: dory_dnsmasq
           :nginx_proxy:
             :enabled: true
@@ -60,8 +63,28 @@ module Dory
       self.write_settings(self.default_yaml, filename, is_yaml: true)
     end
 
+    def self.upgrade_settings_file(filename = self.filename)
+      self.write_settings(self.upgrade(self.settings), filename, is_yaml: false)
+    end
+
     def self.debug?
       self.settings[:dory][:debug]
+    end
+
+    def self.upgrade(old_hash)
+      newsettings = old_hash.dup
+
+      # If there's a single domain and address, upgrade to the array format
+      if newsettings[:dory][:dnsmasq][:domain]
+        newsettings[:dory][:dnsmasq][:domains] = [{
+            domain: newsettings[:dory][:dnsmasq][:domain],
+            address: newsettings[:dory][:dnsmasq][:address] || '127.0.0.1'
+        }]
+        newsettings[:dory][:dnsmasq].delete(:domain)
+        newsettings[:dory][:dnsmasq].delete(:address)
+      end
+
+      newsettings
     end
   end
 end

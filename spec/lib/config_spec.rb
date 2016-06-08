@@ -11,8 +11,11 @@ RSpec.describe Dory::Config do
       :dory:
         :dnsmasq:
           :enabled: true
-          :domain: docker_test_name
-          :address: 192.168.11.1
+          :domains:
+            - :domain: docker_test_name
+              :address: 192.168.11.1
+            - :domain: docker_second_test
+              :address: 192.168.11.3
           :container_name: dory_dnsmasq_test_name
         :nginx_proxy:
           :enabled: true
@@ -42,6 +45,25 @@ RSpec.describe Dory::Config do
     ).split("\n").map{|s| s.sub(' ' * 6, '')}.join("\n")
   end
 
+  let(:upgradeable_config) do
+    %Q(
+      ---
+      :dory:
+        :dnsmasq:
+          :enabled: true
+          :domain: docker_test_name
+          :address: 192.168.11.1
+          :container_name: dory_dnsmasq_test_name
+        :nginx_proxy:
+          :enabled: true
+          :ssl_certs_dir: #{ssl_certs_dir}
+          :container_name: #{proxy_container_name}
+        :resolv:
+          :enabled: true
+          :nameserver: 192.168.11.1
+    ).split("\n").map{|s| s.sub(' ' * 6, '')}.join("\n")
+  end
+
   before :each do
     allow(Dory::Config).to receive(:filename) { filename }
     allow(Dory::Config).to receive(:default_yaml) { default_config }
@@ -55,11 +77,11 @@ RSpec.describe Dory::Config do
     Dory::Config.write_default_settings_file
     test_addr = "3.3.3.3"
     new_config = YAML.load(default_config)
-    new_config[:dory][:dnsmasq][:address] = test_addr
+    new_config[:dory][:dnsmasq][:domains][0][:address] = test_addr
     Dory::Config.write_settings(new_config, filename, is_yaml: false)
     expect(File.exist?(filename)).to be_truthy
-    expect(Dory::Config.settings[:dory][:dnsmasq][:address]).to eq(test_addr)
-    expect(Dory::Config.settings[:dory][:dnsmasq][:domain]).to eq('docker_test_name')
+    expect(Dory::Config.settings[:dory][:dnsmasq][:domains][0][:address]).to eq(test_addr)
+    expect(Dory::Config.settings[:dory][:dnsmasq][:domains][0][:domain]).to eq('docker_test_name')
   end
 
   it "doesn't squash defaults if they're missing in the config file" do
@@ -90,5 +112,16 @@ RSpec.describe Dory::Config do
     it "defaults to non-debug mode" do
       expect(Dory::Config.debug?).to be_falsey
     end
+  end
+
+  it "fixes domain/address in upgrade" do
+    Dory::Config.write_settings(upgradeable_config, filename, is_yaml: true)
+    Dory::Config.upgrade_settings_file(filename)
+    new_settings = Dory::Config.settings
+    expect(new_settings[:dory][:dnsmasq]).not_to have_key(:domain)
+    expect(new_settings[:dory][:dnsmasq]).not_to have_key(:address)
+    expect(new_settings[:dory][:dnsmasq][:domains].length).to eq(1)
+    expect(new_settings[:dory][:dnsmasq][:domains][0][:domain]).to eq('docker_test_name')
+    expect(new_settings[:dory][:dnsmasq][:domains][0][:address]).to eq('192.168.11.1')
   end
 end

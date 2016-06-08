@@ -4,6 +4,20 @@ RSpec.describe Dory::Dnsmasq do
       :dory:
         :dnsmasq:
           :enabled: true
+          :domains:
+            - :domain: docker_test_name
+              :address: 192.168.11.1
+            - :domain: docker_second
+              :address: 192.168.11.2
+          :container_name: dory_dnsmasq_test_name
+    ).split("\n").map{|s| s.sub(' ' * 6, '')}.join("\n")
+  end
+
+  let(:dory_old_config) do
+    %q(---
+      :dory:
+        :dnsmasq:
+          :enabled: true
           :domain: docker_test_name
           :address: 192.168.11.1
           :container_name: dory_dnsmasq_test_name
@@ -34,8 +48,10 @@ RSpec.describe Dory::Dnsmasq do
     allow(Dory::Config).to receive(:filename) { "/tmp/doesnotexist.lies" }
     allow(Dory::Config).to receive(:default_yaml) { dory_config }
     expect(Dory::Dnsmasq.container_name).to eq('dory_dnsmasq_test_name')
-    expect(Dory::Dnsmasq.domain).to eq('docker_test_name')
-    expect(Dory::Dnsmasq.addr).to eq('192.168.11.1')
+    expect(Dory::Dnsmasq.domains).to eq([
+      { domain: 'docker_test_name', address: '192.168.11.1' },
+      { domain: 'docker_second', address: '192.168.11.2' }
+    ])
   end
 
   it "starts up the container" do
@@ -74,6 +90,24 @@ RSpec.describe Dory::Dnsmasq do
     expect{Dory::Dnsmasq.start}.to change{Dory::Dnsmasq.running?}.from(false).to(true)
     expect(Dory::Dnsmasq).to be_container_exists
     expect(Dory::Dnsmasq).to be_running
+  end
+
+  it "handles an old (single) domain properly" do
+    allow(Dory::Config).to receive(:filename) { "/tmp/doesnotexist.lies" }
+    allow(Dory::Config).to receive(:default_yaml) { dory_old_config }
+    expect(Dory::Dnsmasq.old_domain).to eq('docker_test_name')
+    expect(Dory::Dnsmasq.old_address).to eq('192.168.11.1')
+    expect(Dory::Dnsmasq.domain_addr_arg_string).to eq('docker_test_name 192.168.11.1')
+  end
+
+  it "handles an array of domains properly" do
+    allow(Dory::Config).to receive(:filename) { "/tmp/doesnotexist.lies" }
+    allow(Dory::Config).to receive(:default_yaml) { dory_config }
+    expect(Dory::Dnsmasq.old_domain).to be_nil
+    expect(Dory::Dnsmasq.old_address).to be_nil
+    expect(Dory::Dnsmasq.domain_addr_arg_string).to eq(
+      'docker_test_name 192.168.11.1 docker_second 192.168.11.2'
+    )
   end
 
   context 'pre-existing listener on 53' do

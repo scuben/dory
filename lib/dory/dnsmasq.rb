@@ -37,25 +37,39 @@ module Dory
     end
 
     def self.dnsmasq_image_name
-      'freedomben/dory-dnsmasq'
+      'freedomben/dory-dnsmasq:1.1.0'
     end
 
     def self.container_name
       Dory::Config.settings[:dory][:dnsmasq][:container_name]
     end
 
-    def self.domain
+    def self.domains
+      Dory::Config.settings[:dory][:dnsmasq][:domains]
+    end
+
+    def self.old_domain
       Dory::Config.settings[:dory][:dnsmasq][:domain]
     end
 
-    def self.addr
+    def self.old_address
       Dory::Config.settings[:dory][:dnsmasq][:address]
     end
 
-    def self.run_command(domain = self.domain, addr = self.addr)
+    def self.domain_addr_arg_string
+      if self.old_domain
+        "#{Shellwords.escape(self.old_domain)} #{Shellwords.escape(self.old_address)}"
+      else
+        self.domains.map do |domain|
+          "#{Shellwords.escape(domain[:domain])} #{Shellwords.escape(domain[:address])}"
+        end.join(" ")
+      end
+    end
+
+    def self.run_command(domains = self.domains)
       "docker run -d -p 53:53/tcp -p 53:53/udp --name=#{Shellwords.escape(self.container_name)} " \
       "--cap-add=NET_ADMIN #{Shellwords.escape(self.dnsmasq_image_name)} " \
-      "#{Shellwords.escape(domain)} #{Shellwords.escape(addr)}"
+      "#{self.domain_addr_arg_string}"
     end
 
     def self.check_port(port_num)
