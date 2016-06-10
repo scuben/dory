@@ -124,4 +124,17 @@ RSpec.describe Dory::Config do
     expect(new_settings[:dory][:dnsmasq][:domains][0][:domain]).to eq('docker_test_name')
     expect(new_settings[:dory][:dnsmasq][:domains][0][:address]).to eq('192.168.11.1')
   end
+
+  it "uses hashes with indifferent access" do
+    Dory::Config.write_default_settings_file
+    test_addr = "3.3.3.3"
+    new_config = YAML.load(default_config)
+    new_config[:dory][:dnsmasq][:domains][0][:address] = test_addr
+    Dory::Config.write_settings(new_config, filename, is_yaml: false)
+    expect(File.exist?(filename)).to be_truthy
+    expect(Dory::Config.settings[:dory][:dnsmasq][:domains][0][:address]).to eq(test_addr)
+    expect(Dory::Config.settings[:dory][:dnsmasq][:domains][0][:domain]).to eq('docker_test_name')
+    expect(Dory::Config.settings['dory']['dnsmasq']['domains'][0]['address']).to eq(test_addr)
+    expect(Dory::Config.settings['dory']['dnsmasq']['domains'][0]['domain']).to eq('docker_test_name')
+  end
 end
