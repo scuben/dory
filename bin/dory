@@ -69,23 +69,45 @@ class DoryBin < Thor
     containing the default settings.  This can then be configured
     as preferred.
   LONGDESC
+  option :upgrade, type: :boolean, aliases: 'u', default: false
+  option :force, type: :boolean, aliases: 'f', default: false
   def config_file
     exec_config_file(options)
   end
 
   private
 
-  def exec_config_file(_options)
-    if File.exist?(Dory::Config.filename)
-      print "A config file already exists at #{Dory::Config.filename}.  Overwrite with default settings? (Y/N): ".yellow
-      conf = STDIN.gets.chomp
-      unless conf =~ /y/i
-        puts "User declined over-writing.  Not writing config file".red
-        return
-      end
+  def config_file_action(options)
+    if options[:upgrade]
+      'u'
+    elsif options[:force]
+      'o'
+    else
+      print "A config file already exists at #{Dory::Config.filename}.  [U]pgrade, [O]verwrite with default settings, or do [N]othing? (U/O/N): ".yellow
+      STDIN.gets.chomp
     end
-    puts "Writing config file to #{Dory::Config.filename}".green
-    Dory::Config.write_default_settings_file
+  end
+
+  def take_action(action)
+    if action =~ /u/i
+      puts "Upgrading config file at #{Dory::Config.filename}".green
+      Dory::Config.upgrade_settings_file
+    elsif action =~ /o/i
+      puts "Overwriting config file with new version at #{Dory::Config.filename}".green
+      Dory::Config.write_default_settings_file
+    else
+      puts "User declined.  Not writing config file".red
+      return
+    end
+  end
+
+  def exec_config_file(options)
+    if File.exist?(Dory::Config.filename)
+      take_action(config_file_action(options))
+    else
+      puts "Writing new config file to #{Dory::Config.filename}".green
+      Dory::Config.write_default_settings_file
+    end
   end
 
   def exec_up(options)

@@ -51,7 +51,7 @@ Default config file which should be placed at `~/.dory.yml` (can be generated wi
 
 ```yaml
 ---
-:dory:
+dory:
   # Be careful if you change the settings of some of
   # these services.  They may not talk to each other
   # if you change IP Addresses.
@@ -60,17 +60,46 @@ Default config file which should be placed at `~/.dory.yml` (can be generated wi
   # but if you disable dnsmasq, it
   # will make your system look for a name server that
   # doesn't exist.
-  :dnsmasq:
-    :enabled: true
-    :domain: docker      # domain that will be listened for
-    :address: 127.0.0.1  # address returned for queries against domain
-    :container_name: dory_dnsmasq
-  :nginx_proxy:
-    :enabled: true
-    :container_name: dory_dinghy_http_proxy
-  :resolv:
-    :enabled: true
-    :nameserver: 127.0.0.1
+  dnsmasq:
+    enabled: true
+    domains:              # array of domains that will be resolved to the specified address
+      - domain: docker     # you can set '#' for a wilcard
+        address: 127.0.0.1 # return for queries against the domain
+      - domain: dev
+        address: 127.0.0.1
+    container_name: dory_dnsmasq
+  nginx_proxy:
+    enabled: true
+    container_name: dory_dinghy_http_proxy
+    https_enabled: true
+    ssl_certs_dir: ''  # leave as empty string to use default certs
+  resolv:
+    enabled: true
+    nameserver: 127.0.0.1
+```
+
+#### Upgrading existing config file
+
+If you run the `dory config-file` command and have an existing config file,
+dory will offer you the option of upgrading.  This will preserve your settings
+and migrate you to the latest format.  You can skip the prompt by passing the
+`--upgrade` flag
+
+```
+dory config-file --upgrade
+```
+
+```
+Usage:
+  dory config-file
+
+Options:
+  u, [--upgrade], [--no-upgrade]
+  f, [--force]
+
+Description:
+  Writes a dory config file to /home/ben/.dory.yml containing the default
+  settings. This can then be configured as preferred.
 ```
 
 ## Making your containers accessible by name (DNS)

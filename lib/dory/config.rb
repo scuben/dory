@@ -57,6 +57,7 @@ module Dory
 
     def self.write_settings(settings, filename = self.filename, is_yaml: false)
       settings = settings.to_yaml unless is_yaml
+      settings.gsub!(/\s*!ruby\/hash:ActiveSupport::HashWithIndifferentAccess/, '')
       File.write(filename, settings)
     end
 
