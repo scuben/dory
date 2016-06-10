@@ -49,8 +49,8 @@ RSpec.describe Dory::Dnsmasq do
     allow(Dory::Config).to receive(:default_yaml) { dory_config }
     expect(Dory::Dnsmasq.container_name).to eq('dory_dnsmasq_test_name')
     expect(Dory::Dnsmasq.domains).to eq([
-      { domain: 'docker_test_name', address: '192.168.11.1' },
-      { domain: 'docker_second', address: '192.168.11.2' }
+      { 'domain' => 'docker_test_name', 'address' => '192.168.11.1' },
+      { 'domain' => 'docker_second', 'address' => '192.168.11.2' }
     ])
   end
 

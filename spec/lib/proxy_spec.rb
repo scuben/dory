@@ -60,10 +60,10 @@ RSpec.describe Dory::Proxy do
     let(:patch_ssl_enabled) do
       ->(enabled) do
         new_config = YAML.load(Dory::Config.default_yaml)
-        new_config[:dory][:nginx_proxy][:https_enabled] = enabled
-        expect(new_config[:dory][:nginx_proxy][:https_enabled]).to eq(enabled)
+        new_config['dory']['nginx_proxy']['https_enabled'] = enabled
+        expect(new_config['dory']['nginx_proxy']['https_enabled']).to eq(enabled)
         allow(Dory::Config).to receive(:default_yaml) { new_config.to_yaml }
-        expect(Dory::Config.settings[:dory][:nginx_proxy][:https_enabled]).to eq(enabled)
+        expect(Dory::Config.settings['dory']['nginx_proxy']['https_enabled']).to eq(enabled)
       end
     end
 
@@ -99,8 +99,8 @@ RSpec.describe Dory::Proxy do
       let(:patch_config_ssl_certs_dir) do
         ->(ssl_certs_dir) do
           new_config = YAML.load(Dory::Config.default_yaml)
-          new_config[:dory][:nginx_proxy][:ssl_certs_dir] = ssl_certs_dir
-          expect(new_config[:dory][:nginx_proxy][:ssl_certs_dir]).to eq(ssl_certs_dir)
+          new_config['dory']['nginx_proxy']['ssl_certs_dir'] = ssl_certs_dir
+          expect(new_config['dory']['nginx_proxy']['ssl_certs_dir']).to eq(ssl_certs_dir)
           allow(Dory::Config).to receive(:default_yaml) { new_config.to_yaml }
           expect(Dory::Config.settings[:dory][:nginx_proxy][:ssl_certs_dir]).to eq(ssl_certs_dir)
         end

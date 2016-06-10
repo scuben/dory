@@ -89,12 +89,12 @@ RSpec.describe Dory::Config do
     expect(File.exist?(filename)).to be_truthy
 
     settings = Dory::Config.default_settings
-    expect(settings[:dory][:nginx_proxy].keys).to include(:ssl_certs_dir)
+    expect(settings[:dory][:nginx_proxy].keys).to include('ssl_certs_dir')
     expect(settings[:dory][:nginx_proxy][:ssl_certs_dir]).to eq(ssl_certs_dir)
     expect(settings[:dory][:nginx_proxy][:container_name]).to eq(proxy_container_name)
 
     settings = Dory::Config.settings
-    expect(settings[:dory][:nginx_proxy].keys).to include(:ssl_certs_dir)
+    expect(settings[:dory][:nginx_proxy].keys).to include('ssl_certs_dir')
     expect(settings[:dory][:nginx_proxy][:ssl_certs_dir]).to eq(ssl_certs_dir)
     expect(settings[:dory][:nginx_proxy][:container_name]).to eq(overridden_proxy_container_name)
   end
