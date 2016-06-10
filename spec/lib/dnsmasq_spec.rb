@@ -36,6 +36,10 @@ RSpec.describe Dory::Dnsmasq do
     Dory::Sh.run_command('sudo killall exe')
   end
 
+  before :all do
+    cleanup_53
+  end
+
   after :all do
     Dory::Dnsmasq.delete
   end
