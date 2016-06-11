@@ -1,6 +1,6 @@
 # dory
 
-[![Gem Version](https://badge.fury.io/rb/dory.svg)](https://badge.fury.io/rb/dory) [![Build Status](https://travis-ci.org/FreedomBen/dory.svg?branch=master)](https://travis-ci.org/FreedomBen/dory) [![Code Climate](https://codeclimate.com/github/FreedomBen/dory/badges/gpa.svg)](https://codeclimate.com/github/FreedomBen/dory) [![Test Coverage](https://codeclimate.com/github/FreedomBen/dory/badges/coverage.svg)](https://codeclimate.com/github/FreedomBen/dory/coverage)
+[![Gem Version](https://badge.fury.io/rb/dory.svg)](https://badge.fury.io/rb/dory) [![Build Status](https://travis-ci.org/FreedomBen/dory.svg?branch=master)](https://travis-ci.org/FreedomBen/dory) [![Code Climate](https://codeclimate.com/github/FreedomBen/dory/badges/gpa.svg)](https://codeclimate.com/github/FreedomBen/dory) [![Test Coverage](https://codeclimate.com/github/FreedomBen/dory/badges/coverage.svg)](https://codeclimate.com/github/FreedomBen/dory/coverage) [![Dependency Status](https://gemnasium.com/badges/github.com/FreedomBen/dory.svg)](https://gemnasium.com/github.com/FreedomBen/dory)
 
 [Dory](https://github.com/FreedomBen/dory) let's you forget about IP addresses and port numbers
 while you are developing you application.  Through the magic of local DNS services and nginx
