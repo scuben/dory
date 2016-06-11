@@ -8,6 +8,22 @@ require 'dory'
 class DoryBin < Thor
   class_option :verbose, type: :boolean, aliases: 'v', default: false
 
+  desc 'upgrade', 'Upgrade dory to the latest version'
+  long_desc <<-LONGDESC
+    Upgrades dory to the latest version.  Old versions are cleaned up
+
+    If dory was installed with sudo, this may not work.  You will
+    have to do it manually:
+
+      sudo gem install dory   # install the latest versions
+      sudo gem cleanup dory   # cleanup old versions
+
+    > $ dory upgrade
+  LONGDESC
+  def upgrade
+    exec_upgrade(options)
+  end
+
   desc 'up', 'Bring up dory services (nginx-proxy, dnsmasq, resolv)'
   long_desc <<-LONGDESC
     Bring up dory services (nginx-proxy, dnsmasq, resolv)
@@ -76,6 +92,42 @@ class DoryBin < Thor
   end
 
   private
+
+  def exec_upgrade(_options)
+    puts "Checking if dory has updates available...".green
+    new_version = Dory::Upgrade.new_version
+    if new_version
+      if Dory::Upgrade.outdated?(new_version)
+        puts "New version #{new_version} is available.  You currently have #{Dory::VERSION}.".yellow
+        print "Would you like to install the update? (Y/N): ".yellow
+        if STDIN.gets.chomp =~ /y/i
+          puts "Upgrading dory...".green
+          if Dory::Upgrade.install.success?
+            if Dory::Upgrade.cleanup.success?
+              puts "New version installed successfully!\n" \
+                   "You may want to upgrade your config file with:\n\n" \
+                   "    dory config-file --upgrade".green
+            else
+              puts "Failure cleaning up old versions of dory.  You may want " \
+                   "to run 'gem cleanup dory' manually.".red
+            end
+          else
+            puts "Failure installing new version of dory.  If you are " \
+                 "installing into a system ruby, this could be because " \
+                 "you need to use sudo.  Please try 'gem install dory' " \
+                 "manually, and then 'gem cleanup dory' to remove old " \
+                 "versions.".red
+          end
+        else
+          puts "Not upgrading.  User declined.".red
+        end
+      else
+        puts "Dory is up to date!  Nothing to do".green
+      end
+    else
+      puts "Encountered an error checking the latest version from Rubygems".red
+    end
+  end
 
   def config_file_action(options)
     if options[:upgrade]
@@ -211,8 +263,9 @@ class DoryBin < Thor
 end
 
 aliases = {
-  'start' => 'up',
-  'stop'  => 'down',
+  'start'  => 'up',
+  'stop'   => 'down',
+  'update' => 'upgrade'
 }
 
 if !ARGV.empty? && %w[-v --version].include?(ARGV.first)
