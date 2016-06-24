@@ -44,33 +44,33 @@ RSpec.describe Dory::Resolv do
 
   let(:set_ubuntu) do
     ->() do
-      allow(Dory::Linux).to receive(:ubuntu?){ true }
-      allow(Dory::Linux).to receive(:fedora?){ false }
-      allow(Dory::Linux).to receive(:arch?){ false }
+      allow(Dory::Os).to receive(:ubuntu?){ true }
+      allow(Dory::Os).to receive(:fedora?){ false }
+      allow(Dory::Os).to receive(:arch?){ false }
     end
   end
 
   let(:set_fedora) do
     ->() do
-      allow(Dory::Linux).to receive(:ubuntu?){ false }
-      allow(Dory::Linux).to receive(:fedora?){ true }
-      allow(Dory::Linux).to receive(:arch?){ false }
+      allow(Dory::Os).to receive(:ubuntu?){ false }
+      allow(Dory::Os).to receive(:fedora?){ true }
+      allow(Dory::Os).to receive(:arch?){ false }
     end
   end
 
   let(:set_arch) do
     ->() do
-      allow(Dory::Linux).to receive(:ubuntu?){ false }
-      allow(Dory::Linux).to receive(:fedora?){ false }
-      allow(Dory::Linux).to receive(:arch?){ true }
+      allow(Dory::Os).to receive(:ubuntu?){ false }
+      allow(Dory::Os).to receive(:fedora?){ false }
+      allow(Dory::Os).to receive(:arch?){ true }
     end
   end
 
   let(:set_unknown_platform) do
     ->() do
-      allow(Dory::Linux).to receive(:ubuntu?){ false }
-      allow(Dory::Linux).to receive(:fedora?){ false }
-      allow(Dory::Linux).to receive(:arch?){ false }
+      allow(Dory::Os).to receive(:ubuntu?){ false }
+      allow(Dory::Os).to receive(:fedora?){ false }
+      allow(Dory::Os).to receive(:arch?){ false }
     end
   end
 

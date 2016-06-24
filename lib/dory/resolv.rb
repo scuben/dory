@@ -29,9 +29,9 @@ module Dory
     end
 
     def self.resolv_file
-      if Linux.ubuntu?
-        return self.ubuntu_resolv_file if Linux.ubuntu?
-      elsif Linux.fedora? || Linux.arch? || File.exist?(self.common_resolv_file)
+      if Os.ubuntu?
+        return self.ubuntu_resolv_file if Os.ubuntu?
+      elsif Os.fedora? || Os.arch? || File.exist?(self.common_resolv_file)
         return self.common_resolv_file
       else
         raise RuntimeError.new(

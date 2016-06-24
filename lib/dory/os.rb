@@ -1,5 +1,5 @@
 module Dory
-  module Linux
+  module Os
     def self.bash(command)
       system("bash -c '#{command}'")
     end
@@ -16,9 +16,9 @@ module Dory
       self.bash(self.arch_cmd)
     end
 
-		def self.osx?
+    def self.macos?
       self.bash('uname -a | grep "Darwin" > /dev/null')
-		end
+    end
 
     def self.ubuntu_cmd
       %q(
