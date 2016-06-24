@@ -81,7 +81,7 @@ module Dory
     end
 
     def self.contents_has_our_nameserver?(contents)
-     !!((contents =~ /#{self.file_comment}/) || (contents =~ /#{self.file_nameserver_line}/))
+     !!((contents =~ /#{self.file_comment}/) && (contents =~ /#{self.file_nameserver_line}/))
     end
   end
 end

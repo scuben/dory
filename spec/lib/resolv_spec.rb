@@ -164,4 +164,32 @@ RSpec.describe Dory::Resolv do
       end
     end
   end
+
+  context "knows if we've edited the file" do
+    let (:comment) { '# added by dory' }
+
+    let (:stub_resolv) do
+      ->(nameserver, file_comment = comment) do
+        allow(Dory::Resolv).to receive(:nameserver){ nameserver }
+        allow(Dory::Resolv).to receive(:file_comment){ comment }
+        expect(Dory::Resolv.nameserver).to eq(nameserver)
+        expect(Dory::Resolv.file_comment).to eq(comment)
+      end
+    end
+
+    %w[127.0.0.1 192.168.53.164].each do |nameserver|
+      # Note:  This addresses a bug encountered on Fedora 23 Cloud
+      it "doesn't think we edited the file if 127.0.0.1 is there but the comment isn't" do
+        stub_resolv.call(nameserver)
+        contents = "nameserver 1.1.1.1\nnameserver #{nameserver}\nnameserver 2.2.2.2"
+        expect(Dory::Resolv.contents_has_our_nameserver?(contents)).to be_falsey
+      end
+
+      it "does think we edited the file if 127.0.0.1 is there but the comment isn't" do
+        stub_resolv.call(nameserver)
+        contents = "nameserver 1.1.1.1\n#{comment}\nnameserver #{nameserver}\nnameserver 2.2.2.2"
+        expect(Dory::Resolv.contents_has_our_nameserver?(contents)).to be_truthy
+      end
+    end
+  end
 end
