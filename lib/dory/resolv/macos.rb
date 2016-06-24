@@ -3,22 +3,24 @@ require 'colorize'
 module Dory
   module Resolv
     module Macos
-      def self.common_resolv_file
+      def self.system_resolv_file
         '/etc/resolv.conf'
       end
 
-      def self.ubuntu_resolv_file
-        #'/etc/resolvconf/resolv.conf.d/base'
-        # For now, use the common_resolv_file
-        self.common_resolv_file
+      def self.port
+        19323
       end
 
-      def self.macos_resolv_file
-        '/etc/resolver/'
+      def self.resolv_dir
+        '/etc/resolver'
       end
 
-      def self.file_comment
-        '# added by dory'
+      def self.resolv_file_name
+        'dory'
+      end
+
+      def self.resolv_file
+        "#{self.resolv_dir}/#{self.resolv_file_name}"
       end
 
       def self.nameserver
@@ -29,52 +31,31 @@ module Dory
         "nameserver #{self.nameserver}"
       end
 
-      def self.nameserver_contents
-        "#{self.file_nameserver_line}  #{self.file_comment}"
+      def self.file_comment
+        '# added by dory'
       end
 
-      def self.resolv_file
-        if Os.ubuntu?
-          return self.ubuntu_resolv_file if Os.ubuntu?
-        elsif Os.fedora? || Os.arch? || File.exist?(self.common_resolv_file)
-          return self.common_resolv_file
-        else
-          raise RuntimeError.new(
-            "Unable to determine location of resolv file"
-          )
-        end
+      def self.resolv_contents
+        <<-EOF.gsub(' ' * 10, '')
+          #{self.file_comment}
+          #{self.file_nameserver_line}
+          port #{self.port}
+        EOF
       end
 
       def self.configure
-        # we want to be the first nameserver in the list for performance reasons
-        # we only want to add the nameserver if it isn't already there
-        prev_conts = self.resolv_file_contents
-        unless self.contents_has_our_nameserver?(prev_conts)
-          if prev_conts =~ /nameserver/
-            prev_conts.sub!(/nameserver/, "#{self.nameserver_contents}\nnameserver")
-          else
-            prev_conts = "#{prev_conts}\n#{self.nameserver_contents}"
-          end
-          prev_conts.gsub!(/\s+$/, '')
-          self.write_to_file(prev_conts)
-        end
-        self.has_our_nameserver?
+        # have to use this hack cuz we don't run as root :-(
+        puts "Requesting sudo to write to #{self.resolv_file}".green
+        Bash.run_command("echo -e '#{self.resolv_contents}' | sudo tee #{Shellwords.escape(self.resolv_file)} >/dev/null")
       end
 
       def self.clean
-        prev_conts = self.resolv_file_contents
-        if self.contents_has_our_nameserver?(prev_conts)
-          prev_conts.gsub!(/#{Regexp.escape(self.nameserver_contents + "\n")}/, '')
-          prev_conts.gsub!(/\s+$/, '')
-          self.write_to_file(prev_conts)
-        end
-        !self.has_our_nameserver?
+        puts "Requesting sudo to delete '#{self.resolv_file}'"
+        Bash.run_command("sudo rm -f #{self.resolv_file}")
       end
 
-      def self.write_to_file(contents)
-        # have to use this hack cuz we don't run as root :-(
-        puts "Requesting sudo to write to #{self.resolv_file}".green
-        Bash.run_command("echo -e '#{contents}' | sudo tee #{Shellwords.escape(self.resolv_file)} >/dev/null")
+      def self.system_resolv_file_contents
+        File.read(self.system_resolv_file)
       end
 
       def self.resolv_file_contents
@@ -82,7 +63,7 @@ module Dory
       end
 
       def self.has_our_nameserver?
-        self.contents_has_our_nameserver?(self.resolv_file_contents)
+        self.contents_has_our_nameserver?(self.system_resolv_file)
       end
 
       def self.contents_has_our_nameserver?(contents)
