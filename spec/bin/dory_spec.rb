@@ -103,4 +103,17 @@ RSpec.describe DoryBin do
       end
     end
   end
+
+  context 'services enabled/disabled' do
+    %I[nginx_proxy dnsmasq resolv].each do |service|
+      context "#{service}" do
+        [{ enabled: true}, { disabled: false }].each do |enabled|
+          it "is #{enabled.keys.first} when #{enabled.keys.first}" do
+            settings = { dory: { service => { enabled: enabled.values.first }}}
+            expect(dory_bin.send("#{service}_enabled?", (settings))).to eq(enabled.values.first)
+          end
+        end
+      end
+    end
+  end
 end
