@@ -1,6 +1,6 @@
 require 'rspec'
 
-RSpec.describe Dory::Resolv do
+RSpec.describe Dory::Resolv::Macos do
   let(:resolv_file) { '/tmp/resolve' }
 
   let(:ubuntu_resolv_file_contents) do
