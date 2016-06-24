@@ -13,21 +13,21 @@ module Dory
     end
 
     def start(handle_error: true)
-      unless self.running?
+      if self.running?
+        if Dory::Config.debug?
+          puts "[DEBUG] Container '#{self.container_name}' is already running. Doing nothing"
+        end
+      else
         self.run_preconditions
-        status = if self.container_exists?
-                   if Dory::Config.debug?
-                     puts "[DEBUG] Container '#{self.container_name}' already exists.  " \
-                          "Starting with '#{self.start_cmd}'"
-                   end
-                   Sh.run_command(self.start_cmd)
-                 else
-                   if Dory::Config.debug?
-                     puts "[DEBUG] Container '#{self.container_name}' does not exist.  " \
-                          "Creating/starting with '#{self.run_command}'"
-                   end
-                   Sh.run_command(self.run_command)
-                 end
+        if self.container_exists?
+          puts "[DEBUG] Container '#{self.container_name}' exists.  Deleting" if Dory::Config.debug?
+          self.delete
+        end
+        if Dory::Config.debug?
+          puts "[DEBUG] '#{self.container_name} does not exist.  Creating/starting " \
+               "'#{self.container_name}' with '#{self.run_command}'"
+        end
+        status = Sh.run_command(self.run_command)
         unless status.success?
           if !handle_error || !self.handle_error(status)
             raise RuntimeError.new(
