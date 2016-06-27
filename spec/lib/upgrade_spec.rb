@@ -33,4 +33,19 @@ RSpec.describe Dory::Upgrade do
       expect(Dory::Upgrade.new_version).to be_falsey
     end
   end
+
+  it 'knows if it is outdated' do
+    expect(Dory::Upgrade.outdated?(Dory::VERSION)).to be_falsey
+    expect(Dory::Upgrade.outdated?('fake version')).to be_truthy
+  end
+
+  it 'gem installs a new dory' do
+    allow(Dory::Sh).to receive(:run_command).with('gem install dory') { true }
+    expect(Dory::Upgrade.install).to be_truthy
+  end
+
+  it 'cleans up old gems' do
+    allow(Dory::Sh).to receive(:run_command).with('gem cleanup dory') { true }
+    expect(Dory::Upgrade.cleanup).to be_truthy
+  end
 end
