@@ -25,6 +25,10 @@ module Dory
         Dory::Config.settings[:dory][:resolv][:nameserver]
       end
 
+      # Note that we ignore any ports present in the config
+      # file because only port 53 is supported on linux
+      # (and there's not a way to specify it in the resolv.conf
+      # even if we wanted to, which someday hopefully we can)
       def self.file_nameserver_line
         "nameserver #{self.nameserver}"
       end

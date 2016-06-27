@@ -26,6 +26,7 @@ module Dory
               - domain: dev
                 address: 127.0.0.1
             container_name: dory_dnsmasq
+            port: 53  # port to listen for dns requests on.  must be 53 on linux. can be anything that's open on macos
           nginx_proxy:
             enabled: true
             container_name: dory_dinghy_http_proxy
@@ -34,6 +35,7 @@ module Dory
           resolv:
             enabled: true
             nameserver: 127.0.0.1
+            port: 53  # port where the nameserver listens. On linux it must be 53
       ).split("\n").map{|s| s.sub(' ' * 8, '')}.join("\n")
     end
 

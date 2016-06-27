@@ -2,9 +2,9 @@ require 'rspec'
 
 RSpec.describe Dory::Resolv::Macos do
   let(:resolv_dir) { '/tmp/resolver' }
-  let(:resolv_file) { 'dory' }
+  let(:resolv_files) { %w[docker dev dory] }
   let(:system_resolv_file) { '/tmp/resolv.conf' }
-  let(:filename) { '/tmp/resolver/dory' }
+  let(:filenames) { %w[/tmp/resolver/docker /tmp/resolver/dev /tmp/resolver/dory] }
 
   let(:ubuntu_resolv_file_contents) do
     %q(
@@ -20,10 +20,10 @@ RSpec.describe Dory::Resolv::Macos do
   let(:stub_resolv_file) do
     ->() do
       allow(Dory::Resolv::Macos).to receive(:resolv_dir) { resolv_dir }
-      allow(Dory::Resolv::Macos).to receive(:resolv_file_name) { resolv_file }
+      allow(Dory::Resolv::Macos).to receive(:resolv_file_names) { resolv_files }
       allow(Dory::Resolv::Macos).to receive(:system_resolv_file) { system_resolv_file }
       # make sure we aren't going to over-write the real resolv file
-      expect(Dory::Resolv::Macos.resolv_file).to eq(filename)
+      expect(Dory::Resolv::Macos.resolv_files).to eq(filenames)
       expect(Dory::Resolv::Macos.system_resolv_file).to eq(system_resolv_file)
     end
   end
@@ -37,30 +37,78 @@ RSpec.describe Dory::Resolv::Macos do
     end
   end
 
+  context 'settings' do
+    context 'resolv' do
+      let(:default_port) { 19323 }
+      let(:specified_port) { 9999 }
+      let(:explicit_port) {{ dory: { resolv: { port: specified_port }}}}
+      let(:implicit_port) {{ dory: { resolv: {}}}}
+
+      it 'has a default port if one is not specified' do
+        allow(Dory::Config).to receive(:settings) { explicit_port }
+        expect(Dory::Resolv::Macos.port).to eq(specified_port)
+      end
+
+      it "let's you specify a port" do
+        allow(Dory::Config).to receive(:settings) { implicit_port }
+        expect(Dory::Resolv::Macos.port).to eq(default_port)
+      end
+    end
+
+    context 'dnsmasq' do
+      let(:domains) { %w[docker dev dory somethingelse] }
+      let(:domains_settings) {{ dory: { dnsmasq: {
+        domains: domains.map{|d| { domain: d, address: '127.0.0.1' } }
+      }}}}
+
+      it 'has a filename for each domain' do
+        allow(Dory::Config).to receive(:settings) { domains_settings }
+        expect(Dory::Resolv::Macos.resolv_file_names).to match_array(domains)
+        expect(Dory::Resolv::Macos.resolv_files).to match_array(
+          domains.map{|d| "#{Dory::Resolv::Macos.resolv_dir}/#{d}" }
+        )
+      end
+    end
+  end
+
   context "creating and deleting the file" do
     before :each do
       stub_resolv_file.call()
       # To add an extra layer of protection against modifying the
       # real resolv file, make sure it matches
-      expect(Dory::Resolv::Macos.resolv_file).to eq(resolv_file)
-      File.delete(Dory::Resolv::Macos.resolv_file) if File.exists?(Dory::Resolv::Macos.resolv_file)
-      expect(File.exists?(Dory::Resolv::Macos.resolv_file)).to be_falsey
+      expect(Dory::Resolv::Macos.resolv_files).to match_array(filenames)
+      filenames.each do |filename|
+        if File.exists?(filename)
+          puts "Requesting sudo to delete #{filename}".green
+          Dory::Bash.run_command("sudo rm -f #{filename}")
+        end
+        expect(File.exists?(filename)).to be_falsey
+      end
     end
 
-    it "creates the file with the nameserver in it" do
-      expect{Dory::Resolv::Macos.configure}.to change{
-        File.exists?(Dory::Resolv::Macos.resolv_file)
-      }.from(false).to(true)
-      expect(File.read(Dory::Resolv::Macos.resolv_file)).to match(/added.by.dory/)
+    it 'creates the directory if it doesn\'t exist' do
+      puts "Requesting sudo to delete #{resolv_dir}".green
+      Dory::Bash.run_command("sudo rm -rf #{resolv_dir}")
+      expect{Dory::Resolv::Macos.configure}.to change{Dir.exists?(resolv_dir)}.from(false).to(true)
+    end
+
+    it "creates the files with the nameserver in it" do
+      expect(filenames.all?{|f| !File.exists?(f)}).to be_truthy
+      Dory::Resolv::Macos.configure
+      expect(filenames.all? do |f|
+        File.exists?(f) && File.read(f) =~ /added.by.dory/
+      end).to be_truthy
     end
 
     it "cleans up properly" do
-      expect{Dory::Resolv::Macos.configure}.to change{
-        File.exists?(Dory::Resolv::Macos.resolv_file)
-      }.from(false).to(true)
-      expect{Dory::Resolv::Macos.clean}.to change{
-        File.exists?(Dory::Resolv::Macos.resolv_file)
-      }.from(true).to(false)
+      filenames.each do |filename|
+        expect{Dory::Resolv::Macos.configure}.to change{
+          File.exists?(filename)
+        }.from(false).to(true)
+        expect{Dory::Resolv::Macos.clean}.to change{
+          File.exists?(filename)
+        }.from(true).to(false)
+      end
     end
   end
 
