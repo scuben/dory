@@ -207,25 +207,25 @@ dory config-file
 ```
 * On the local machine, disable the nginx-proxy, and set the dnsmasq address to that of your cloud server:
 ```yaml
-  :dnsmasq:
-    :enabled: true
-    :domain: docker      # domain that will be listened for
-    :address: <cloud-server-ip>  # address returned for queries against domain
-    :container_name: dory_dnsmasq
-  :nginx_proxy:
-    :enabled: false
-    :container_name: dory_dinghy_http_proxy
+  dnsmasq:
+    enabled: true
+    domain: docker      # domain that will be listened for
+    address: <cloud-server-ip>  # address returned for queries against domain
+    container_name: dory_dnsmasq
+  nginx_proxy:
+    enabled: false
+    container_name: dory_dinghy_http_proxy
 ```
 * On the server, disable resolv and dnsmasq:
 ```yaml
-  :dnsmasq:
-    :enabled: false
-    :domain: docker      # domain that will be listened for
-    :address: 127.0.0.1  # address returned for queries against domain
-    :container_name: dory_dnsmasq
-  :resolv:
-    :enabled: false
-    :nameserver: 127.0.0.1
+  dnsmasq:
+    enabled: false
+    domain: docker      # domain that will be listened for
+    address: 127.0.0.1  # address returned for queries against domain
+    container_name: dory_dnsmasq
+  resolv:
+    enabled: false
+    nameserver: 127.0.0.1
 ```
 * Profit!
 
