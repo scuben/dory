@@ -166,7 +166,7 @@ docker runs natively.  Something it does that can benefit linux users however, i
 setup and management of an [nginx reverse HTTP proxy](https://www.nginx.com/resources/admin-guide/reverse-proxy/).
 Using full dinghy on Linux for local development doesn't really make sense to me,
 but using a reverse proxy does.  Furthermore, if you work with other devs who run
-Dinghy on OS X, you will have to massage your (docker-compose)[https://docs.docker.com/compose/]
+Dinghy on OS X, you will have to massage your [docker-compose](https://docs.docker.com/compose/)
 files to avoid conflicting.  By using  [dory](https://github.com/FreedomBen/dory),
 you can safely use the same `VIRTUAL_HOST` setup without conflict.  And because
 dory uses [dinghy-http-proxy](https://github.com/codekitchen/dinghy-http-proxy)
