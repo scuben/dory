@@ -3,7 +3,6 @@ require 'ostruct'
 RSpec.describe Dory::Upgrade do
   context 'parsing the version' do
     let(:version_num) { "2.2.2" }
-    let(:errmsg) { 'Could not parse version' }
 
     let(:version_str) do
       ->(version_number) do
@@ -26,12 +25,12 @@ RSpec.describe Dory::Upgrade do
 
     it "returns an error if the regex parses multiple matches" do
       stub_sh.call(true, 'dory some version')
-      expect(Dory::Upgrade.new_version).to eq(errmsg)
+      expect(Dory::Upgrade.new_version).to be_falsey
     end
 
     it "returns an error if the regex parses multiple matches" do
       stub_sh.call(false, '')
-      expect(Dory::Upgrade.new_version).to eq(errmsg)
+      expect(Dory::Upgrade.new_version).to be_falsey
     end
   end
 end
