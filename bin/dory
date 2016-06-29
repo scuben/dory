@@ -33,10 +33,13 @@ class DoryBin < Thor
     for your custom domain to the nginx proxy.  The local resolver
     will also be configured to use the dnsmasq instance as a nameserver
 
-    > $ dory up
+    Optionally, you can pass a list of service names as arguments
+    to have only one or two services started.
+
+    > $ dory up [proxy] [dns] [resolv]
   LONGDESC
-  def up
-    exec_up(options)
+  def up(*services)
+    exec_up(options, services)
   end
 
   desc 'down', 'Stop all dory services'
@@ -44,11 +47,14 @@ class DoryBin < Thor
     Stops all dory services.  Can optionally pass [-d|--destroy]
     to destroy the containers when they stop.
 
-    > $ dory down [-d|--destroy]
+    Optionally, you can pass a list of service names as arguments
+    to have only one or two services started.
+
+    > $ dory down [-d|--destroy] [proxy] [dns] [resolv]
   LONGDESC
   option :destroy, type: :boolean, aliases: 'd', default: true
-  def down
-    exec_down(options)
+  def down(*services)
+    exec_down(options, services)
   end
 
   desc 'version', 'Check current installed version of dory'
@@ -63,9 +69,9 @@ class DoryBin < Thor
     > $ dory restart [-d|--destroy]
   LONGDESC
   option :destroy, type: :boolean, aliases: 'd', default: true
-  def restart
-    exec_down(options)
-    exec_up(options)
+  def restart(*services)
+    exec_down(options, services)
+    exec_up(options, services)
   end
 
   desc 'status', 'Report status of the dory services'
@@ -162,40 +168,49 @@ class DoryBin < Thor
     end
   end
 
-  def exec_up(options)
+  def exec_up(options, services)
+    services = sanitize_services(services)
+    return unless services
+
     puts "Reading settings file at '#{Dory::Config.filename}'".green if options[:verbose]
     settings = Dory::Config.settings
-    if nginx_proxy_enabled?(settings)
-      puts "nginx_proxy enabled in config file".green if options[:verbose]
-      if Dory::Proxy.start
-        puts "Successfully started nginx proxy".green
+    if services.include?('proxy')
+      if nginx_proxy_enabled?(settings)
+        puts "nginx_proxy enabled in config file".green if options[:verbose]
+        if Dory::Proxy.start
+          puts "Successfully started nginx proxy".green
+        else
+          puts "Error starting nginx proxy".red
+        end
       else
-        puts "Error starting nginx proxy".red
+        puts "nginx_proxy disabled in config file".yellow
       end
-    else
-      puts "nginx_proxy disabled in config file".yellow
     end
 
-    if dnsmasq_enabled?(settings)
-      puts "dnsmasq enabled in config file".green if options[:verbose]
-      if Dory::Dnsmasq.start
-        puts "Successfully started dnsmasq".green
+    if services.include?('dns')
+      if dnsmasq_enabled?(settings)
+        puts "dnsmasq enabled in config file".green if options[:verbose]
+        if Dory::Dnsmasq.start
+          puts "Successfully started dnsmasq".green
+        else
+          puts "Error starting dnsmasq".red
+        end
       else
-        puts "Error starting dnsmasq".red
+        puts "dnsmasq disabled in config file".yellow
       end
-    else
-      puts "dnsmasq disabled in config file".yellow
     end
 
-    if resolv_enabled?(settings)
-      if Dory::Resolv.configure
-        puts "Successfully configured local resolver".green
+    if services.include?('resolv')
+      if resolv_enabled?(settings)
+        if Dory::Resolv.configure
+          puts "Successfully configured local resolver".green
+        else
+          puts "Error configuring local resolver".red
+        end
+        puts "resolv enabled in config file".green if options[:verbose]
       else
-        puts "Error configuring local resolver".red
+        puts "resolv disabled in config file".yellow
       end
-      puts "resolv enabled in config file".green if options[:verbose]
-    else
-      puts "resolv disabled in config file".yellow
     end
   end
 
@@ -228,52 +243,61 @@ class DoryBin < Thor
     end
   end
 
-  def exec_down(options)
+  def exec_down(options, services)
+    services = sanitize_services(services)
+    return unless services
+
     puts "Reading settings file at '#{Dory::Config.filename}'".green if options[:verbose]
     settings = Dory::Config.settings
 
-    if Dory::Resolv.clean
-      if resolv_enabled?(settings)
-        puts "nameserver removed from resolv file".green
-      else
-        puts "Resolv disabled in config file".yellow
-      end
-    else
-      puts "Unable to remove nameserver from resolv file".red
-    end
-
-    if Dory::Dnsmasq.stop
-      if dnsmasq_enabled?(settings)
-        puts "Dnsmasq container stopped".green
-        if options[:destroy]
-          if Dory::Dnsmasq.delete
-            puts "Dnsmasq container successfully deleted".green
-          else
-            puts "Dnsmasq container failed to delete".red
-          end
+    if services.include?('resolv')
+      if Dory::Resolv.clean
+        if resolv_enabled?(settings)
+          puts "nameserver removed from resolv file".green
+        else
+          puts "Resolv disabled in config file".yellow
         end
       else
-        puts "dnsmasq disabled in config file".yellow
+        puts "Unable to remove nameserver from resolv file".red
       end
-    else
-      puts "Dnsmasq container failed to stop".red
     end
 
-    if Dory::Proxy.stop
-      if nginx_proxy_enabled?(settings)
-        puts "Nginx proxy stopped".green
-        if options[:destroy]
-          if Dory::Proxy.delete
-            puts "Nginx proxy container successfully deleted".green
-          else
-            puts "Nginx proxy container failed to delete".red
+    if services.include?('dns')
+      if Dory::Dnsmasq.stop
+        if dnsmasq_enabled?(settings)
+          puts "Dnsmasq container stopped".green
+          if options[:destroy]
+            if Dory::Dnsmasq.delete
+              puts "Dnsmasq container successfully deleted".green
+            else
+              puts "Dnsmasq container failed to delete".red
+            end
           end
+        else
+          puts "dnsmasq disabled in config file".yellow
         end
       else
-        puts "Nginx proxy disabled in config file".yellow
+        puts "Dnsmasq container failed to stop".red
       end
-    else
-      puts "Nginx proxy failed to stop".red
+    end
+
+    if services.include?('proxy')
+      if Dory::Proxy.stop
+        if nginx_proxy_enabled?(settings)
+          puts "Nginx proxy stopped".green
+          if options[:destroy]
+            if Dory::Proxy.delete
+              puts "Nginx proxy container successfully deleted".green
+            else
+              puts "Nginx proxy container failed to delete".red
+            end
+          end
+        else
+          puts "Nginx proxy disabled in config file".yellow
+        end
+      else
+        puts "Nginx proxy failed to stop".red
+      end
     end
   end
 
@@ -299,6 +323,44 @@ class DoryBin < Thor
 
   def resolv_disabled?(settings)
     !resolv_enabled?(settings)
+  end
+
+  def valid_services
+    %w[proxy dns resolv]
+  end
+
+  def canonical_service(service)
+    {
+      'proxy' => 'proxy',
+      'nginx' => 'proxy',
+      'nginx_proxy' => 'proxy',
+      'nginx-proxy' => 'proxy',
+      'dns' => 'dns',
+      'dnsmasq' => 'dns',
+      'resolv' => 'resolv',
+      'resolve' => 'resolv'
+    }[service]
+  end
+
+  def valid_service?(service)
+    valid_services.include?(canonical_service(service))
+  end
+
+  def valid_services?(services)
+    services.all? do |service|
+      if valid_service?(service)
+        true
+      else
+        puts "'#{service}' is not valid.  Must be one or more of these: #{valid_services.join(', ')}"
+        false
+      end
+    end
+  end
+
+  def sanitize_services(services)
+    return valid_services if !services || services.empty?
+    return false unless valid_services?(services)
+    services.map{|s| canonical_service(s) }
   end
 end
 
