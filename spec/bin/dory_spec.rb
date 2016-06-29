@@ -29,7 +29,7 @@ RSpec.describe DoryBin do
         allow(Dory::Resolv).to receive(:configure) { service == 'resolv' }
         dory_bin.up(service)
         expect(Dory::Proxy).send(service == 'proxy' ? :to : :not_to, have_received(:start))
-        expect(Dory::Dnsmasq).send(service == 'dnsmasq' ? :to : :not_to, have_received(:start))
+        expect(Dory::Dnsmasq).send(service == 'dns' ? :to : :not_to, have_received(:start))
         expect(Dory::Resolv).send(service == 'resolv' ? :to : :not_to, have_received(:configure))
       end
     end
@@ -43,7 +43,7 @@ RSpec.describe DoryBin do
         allow(Dory::Resolv).to receive(:clean) { service == 'resolv' }
         dory_bin.down(service)
         expect(Dory::Proxy).send(service == 'proxy' ? :to : :not_to, have_received(:stop))
-        expect(Dory::Dnsmasq).send(service == 'dnsmasq' ? :to : :not_to, have_received(:stop))
+        expect(Dory::Dnsmasq).send(service == 'dns' ? :to : :not_to, have_received(:stop))
         expect(Dory::Resolv).send(service == 'resolv' ? :to : :not_to, have_received(:clean))
       end
     end
@@ -64,10 +64,10 @@ RSpec.describe DoryBin do
         allow(Dory::Resolv).to receive(:clean) { service == 'resolv' }
         dory_bin.restart(service)
         expect(Dory::Proxy).send(service == 'proxy' ? :to : :not_to, have_received(:stop))
-        expect(Dory::Dnsmasq).send(service == 'dnsmasq' ? :to : :not_to, have_received(:stop))
+        expect(Dory::Dnsmasq).send(service == 'dns' ? :to : :not_to, have_received(:stop))
         expect(Dory::Resolv).send(service == 'resolv' ? :to : :not_to, have_received(:clean))
         expect(Dory::Proxy).send(service == 'proxy' ? :to : :not_to, have_received(:start))
-        expect(Dory::Dnsmasq).send(service == 'dnsmasq' ? :to : :not_to, have_received(:start))
+        expect(Dory::Dnsmasq).send(service == 'dns' ? :to : :not_to, have_received(:start))
         expect(Dory::Resolv).send(service == 'resolv' ? :to : :not_to, have_received(:configure))
       end
     end
