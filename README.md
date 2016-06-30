@@ -7,10 +7,11 @@ while you are developing you application.  Through the magic of local DNS servic
 reverse proxy, you can access your app at the domain of your choosing.  For example,
 http://myapp.docker or http://this-is-a-really-long-name.but-its-cool-cause-i-like-it
 
+Now with (alpha) support for Docker for Mac!
+
 Dory wraps [codekitchen/dinghy-http-proxy](https://github.com/codekitchen/dinghy-http-proxy)
-and makes it easily available for use on Linux.  This way you can work comfortably
-side by side on [docker](https://github.com/docker/docker)/[docker-compose](https://github.com/docker/compose)
-with your colleagues who run OS X.
+and makes it easily available for use outside of [dinghy](https://github.com/codekitchen/dinghy).
+This way you can work comfortably side by side with your colleagues who run dinghy on macOS.
 
 Specifically, dory will:
 
@@ -68,6 +69,7 @@ dory:
       - domain: dev
         address: 127.0.0.1
     container_name: dory_dnsmasq
+    port: 53  # port to listen for dns requests on.  must be 53 on linux. can be anything that's open on macos
   nginx_proxy:
     enabled: true
     container_name: dory_dinghy_http_proxy
@@ -76,6 +78,7 @@ dory:
   resolv:
     enabled: true
     nameserver: 127.0.0.1
+    port: 53  # port where the nameserver listens. On linux it must be 53
 ```
 
 #### Upgrading existing config file
@@ -158,6 +161,10 @@ in `/etc/NetworkManager/NetworkManager.conf`.  Then restart
 NetworkManager:  `sudo service network-manager restart` or
 `sudo systemctl restart NetworkManager`
 
+If you are on Mac, you can choose which port to bind the dnsmasq container to.  In your
+dory config file, adjust the setting under `dory -> dnsmasq -> port`.  You probably want
+to make `dory -> resolv -> port` match.  The default value on Mac is 19323.
+
 ## Is this dinghy for Linux?
 
 No. Well, maybe sort of, but not really.  [Dinghy](https://github.com/codekitchen/dinghy)
@@ -228,6 +235,10 @@ dory config-file
     nameserver: 127.0.0.1
 ```
 * Profit!
+
+## Contributing
+
+Want to contribute?  Cool!  Fork it, push it, request it.  Please try to write tests for any functionality you add.
 
 ## Built on:
 
