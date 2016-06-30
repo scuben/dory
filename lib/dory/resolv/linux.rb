@@ -13,10 +13,6 @@ module Dory
         self.common_resolv_file
       end
 
-      def self.macos_resolv_file
-        '/etc/resolver/'
-      end
-
       def self.file_comment
         '# added by dory'
       end
@@ -90,7 +86,7 @@ module Dory
       end
 
       def self.contents_has_our_nameserver?(contents)
-       !!((contents =~ /#{self.file_comment}/) || (contents =~ /#{self.file_nameserver_line}/))
+       !!((contents =~ /#{self.file_comment}/) && (contents =~ /#{self.file_nameserver_line}/))
       end
     end
   end

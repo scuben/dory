@@ -7,7 +7,7 @@ RSpec.describe DoryBin do
     DoryBin.start(args)
   end
 
-  def captured_stdout
+  def capture_stdout
     begin
       old_stdout = $stdout
       $stdout = StringIO.new('','w')

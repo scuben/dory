@@ -11,8 +11,8 @@ module Dory
 
       # we don't want to hassle the user with checking the port unless necessary
       if @@first_attempt_failed
-        puts "[DEBUG] First attempt failed.  Checking port 53" if Dory::Config.debug?
-        listener_list = self.check_port(53)
+        puts "[DEBUG] First attempt failed.  Checking port #{self.port}" if Dory::Config.debug?
+        listener_list = self.check_port(self.port)
         unless listener_list.empty?
           return self.offer_to_kill(listener_list)
         end
@@ -34,6 +34,16 @@ module Dory
         @@first_attempt_failed = true
         self.start(handle_error: false)
       end
+    end
+
+    def self.port
+      return 53 unless Os.macos?
+      p = Dory::Config.settings[:dory][:dnsmasq][:port]
+      p.nil? || p == 0 ? 19323 : self.sanitize_port(p)
+    end
+
+    def self.sanitize_port(port)
+      port.to_s.gsub(/\D/, '').to_i
     end
 
     def self.dnsmasq_image_name
@@ -67,14 +77,15 @@ module Dory
     end
 
     def self.run_command(domains = self.domains)
-      "docker run -d -p 53:53/tcp -p 53:53/udp --name=#{Shellwords.escape(self.container_name)} " \
+      "docker run -d -p #{self.port}:#{self.port}/tcp -p #{self.port}:#{self.port}/udp " \
+      "--name=#{Shellwords.escape(self.container_name)} " \
       "--cap-add=NET_ADMIN #{Shellwords.escape(self.dnsmasq_image_name)} " \
       "#{self.domain_addr_arg_string}"
     end
 
     def self.check_port(port_num)
-      puts "Requesting sudo to check if something is bound to port 53".green
-      ret = Sh.run_command('sudo lsof -i :53')
+      puts "Requesting sudo to check if something is bound to port #{self.port}".green
+      ret = Sh.run_command("sudo lsof -i :#{self.port}")
       return [] unless ret.success?
 
       list = ret.stdout.split("\n")
@@ -97,7 +108,7 @@ module Dory
 
     def self.offer_to_kill(listener_list, answer: nil)
       listener_list.each do |process|
-        puts "Process '#{process.command}' with PID '#{process.pid}' is listening on #{process.node} port 53."
+        puts "Process '#{process.command}' with PID '#{process.pid}' is listening on #{process.node} port #{self.port}."
       end
       pids = listener_list.uniq(&:pid).map(&:pid)
       pidstr = pids.join(' and ')

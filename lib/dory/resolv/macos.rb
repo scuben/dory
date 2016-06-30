@@ -52,7 +52,7 @@ module Dory
 
       def self.configure
         # have to use this hack cuz we don't run as root :-(
-        unless Dir.exists?(self.resolv_dir)
+        unless Dir.exist?(self.resolv_dir)
           puts "Requesting sudo to create directory #{self.resolv_dir}".green
           Bash.run_command("sudo mkdir -p #{self.resolv_dir}")
         end
@@ -78,11 +78,13 @@ module Dory
       end
 
       def self.has_our_nameserver?
-        self.contents_has_our_nameserver?(self.system_resolv_file)
+        self.resolv_files.all? do |filename|
+          self.contents_has_our_nameserver?(File.read(filename))
+        end
       end
 
       def self.contents_has_our_nameserver?(contents)
-       !!((contents =~ /#{self.file_comment}/) || (contents =~ /#{self.file_nameserver_line}/))
+        !!((contents =~ /#{self.file_comment}/) && (contents =~ /#{self.file_nameserver_line}/) && (contents =~ /port.#{self.port}/))
       end
     end
   end

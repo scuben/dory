@@ -139,4 +139,59 @@ RSpec.describe Dory::Dnsmasq do
       expect(Dory::Dnsmasq.check_port(port)).not_to be_empty
     end
   end
+
+  context 'specified port' do
+    let(:stub_settings) do
+      ->(new_settings) do
+        allow(Dory::Config).to receive(:settings) { new_settings }
+      end
+    end
+
+    context 'linux' do
+      it 'always returns port 53 on linux' do
+        port = 53
+        stub_settings.call({ dory: { dnsmasq: { domain: 'docker' }}})
+        expect(Dory::Dnsmasq.port).to eq(port)
+        expect(Dory::Dnsmasq.run_command).to match(/-p.#{port}:#{port}\/tcp.-p.#{port}:#{port}\/udp/)
+        stub_settings.call({ dory: { dnsmasq: { domain: 'docker', port: 9999 }}})
+        expect(Dory::Dnsmasq.port).to eq(port)
+        expect(Dory::Dnsmasq.run_command).to match(/-p.#{port}:#{port}\/tcp.-p.#{port}:#{port}\/udp/)
+      end
+    end
+
+    context 'macos' do
+      before(:each) do
+        allow(Dory::Os).to receive(:macos?) { true }
+      end
+
+      after(:each) do
+        allow(Dory::Os).to receive(:macos?).and_call_original
+      end
+
+      it 'defaults port to 19323 on macos' do
+        stub_settings.call({ dory: { dnsmasq: {}}})
+        expect(Dory::Dnsmasq.port).to eq(19323)
+      end
+
+      it 'respects the port setting on macos' do
+        port = 9999
+        stub_settings.call({ dory: { dnsmasq: { domain: 'docker', port: port }}})
+        expect(Dory::Dnsmasq.port).to eq(port)
+        expect(Dory::Dnsmasq.run_command).to match(/-p.#{port}:#{port}\/tcp.-p.#{port}:#{port}\/udp/)
+      end
+
+      it 'sanitizes the port input' do
+        stub_settings.call({ dory: { dnsmasq: { domain: 'docker', port: '9999' }}})
+        expect(Dory::Dnsmasq.port).to eq(9999)
+        stub_settings.call({ dory: { dnsmasq: { domain: 'docker', port: '999a' }}})
+        expect(Dory::Dnsmasq.port).to eq(999)
+        stub_settings.call({ dory: { dnsmasq: { domain: 'docker', port: '999;' }}})
+        expect(Dory::Dnsmasq.port).to eq(999)
+        stub_settings.call({ dory: { dnsmasq: { domain: 'docker', port: '999"' }}})
+        expect(Dory::Dnsmasq.port).to eq(999)
+        stub_settings.call({ dory: { dnsmasq: { domain: 'docker', port: '999\'' }}})
+        expect(Dory::Dnsmasq.port).to eq(999)
+      end
+    end
+  end
 end
