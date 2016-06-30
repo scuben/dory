@@ -154,6 +154,15 @@ RSpec.describe DoryBin do
       expect{capture_stdout{dory_bin.status}}.not_to raise_error
       expect{capture_stdout{dory_bin.up}}.not_to raise_error
       expect{capture_stdout{dory_bin.status}}.not_to raise_error
+      expect{capture_stdout{dory_bin.down}}.not_to raise_error
+      expect{capture_stdout{dory_bin.status}}.not_to raise_error
+      set_macos.call
+      expect{capture_stdout{dory_bin.status}}.not_to raise_error
+      expect{capture_stdout{dory_bin.up}}.not_to raise_error
+      expect{capture_stdout{dory_bin.status}}.not_to raise_error
+      expect{capture_stdout{dory_bin.down}}.not_to raise_error
+      expect{capture_stdout{dory_bin.status}}.not_to raise_error
+      unset_macos.call
     end
   end
 

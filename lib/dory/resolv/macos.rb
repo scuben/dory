@@ -79,7 +79,11 @@ module Dory
 
       def self.has_our_nameserver?
         self.resolv_files.all? do |filename|
-          self.contents_has_our_nameserver?(File.read(filename))
+          if File.exist?(filename)
+            self.contents_has_our_nameserver?(File.read(filename))
+          else
+            false
+          end
         end
       end
 
