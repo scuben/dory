@@ -47,7 +47,7 @@ RSpec.describe DoryBin do
         :nginx_proxy:
           :enabled: true
           :ssl_certs_dir: #{ssl_certs_dir}
-          :container_name: #{proxy_container_name}
+          :container_name: dory_dinghy_http_proxy_test_name
         :resolv:
           :enabled: true
           :nameserver: 192.168.11.1
@@ -75,7 +75,6 @@ RSpec.describe DoryBin do
   end
 
   let(:ssl_certs_dir) { '/usr/bin' }
-  let(:proxy_container_name) { 'dory_dinghy_http_proxy_test_name' }
   let(:overridden_proxy_container_name) { 'some_container_name' }
 
   before :all do
@@ -93,6 +92,12 @@ RSpec.describe DoryBin do
     allow(Dory::Resolv::Macos).to receive(:resolv_files) { macos_resolv_filenames }
     allow(Dory::Resolv::Linux).to receive(:common_resolv_file) { linux_resolv_filename }
     allow(Dory::Resolv::Linux).to receive(:ubuntu_resolv_file) { linux_resolv_filename }
+  end
+
+  after :each do
+    # delete any containers we made so we don't pollute other tests
+    Dory::Dnsmasq.delete
+    Dory::Proxy.delete
   end
 
   describe 'up' do
