@@ -233,6 +233,7 @@ dory config-file
 
 * [jwilder/nginx-proxy](https://github.com/jwilder/nginx-proxy) (Indirectly but worthy of mention)
 * [codekitchen/dinghy-http-proxy](https://github.com/codekitchen/dinghy-http-proxy)
+* [freedomben/dory-http-proxy](https://github.com/freedomben/dory-http-proxy)
 * [andyshinn/dnsmasq](https://hub.docker.com/r/andyshinn/dnsmasq/)
 * [freedomben/dory-dnsmasq](https://github.com/FreedomBen/dory-dnsmasq)
 * [erikhuda/thor](https://github.com/erikhuda/thor)
