@@ -7,6 +7,17 @@ RSpec.describe DoryBin do
     DoryBin.start(args)
   end
 
+  def captured_stdout
+    begin
+      old_stdout = $stdout
+      $stdout = StringIO.new('','w')
+      yield
+      $stdout.string
+    ensure
+      $stdout = old_stdout
+    end
+  end
+
   let(:dory_bin) { DoryBin.new }
 
   before :all do
@@ -50,7 +61,9 @@ RSpec.describe DoryBin do
   end
 
   describe 'version' do
-
+    it 'answers with the version' do
+      expect(capture_stdout{dory_bin.version}).to match(/dory.*version.*#{Dory::VERSION}/i)
+    end
   end
 
   describe 'restart' do
