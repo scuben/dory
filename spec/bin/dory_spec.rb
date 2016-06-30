@@ -1,8 +1,6 @@
 load 'bin/dory'
 
 RSpec.describe DoryBin do
-  CONFIG_FILENAME = '/tmp/dory-test-config.yml'
-
   def run_with(*args)
     DoryBin.start(args)
   end
@@ -18,18 +16,83 @@ RSpec.describe DoryBin do
     end
   end
 
+  def resolv_dir
+    '/tmp/resolver'
+  end
+
+  def macos_resolv_filenames
+    %w[/tmp/resolver/docker /tmp/resolver/dev /tmp/resolver/dory]
+  end
+
+  def linux_resolv_filename
+    '/tmp/resolv.conf'
+  end
+
+  def config_filename
+    '/tmp/dory-test-config-yml'
+  end
+
+  def default_config
+    %Q(
+      ---
+      :dory:
+        :dnsmasq:
+          :enabled: true
+          :domains:
+            - :domain: docker_test_name
+              :address: 192.168.11.1
+            - :domain: docker_second_test
+              :address: 192.168.11.3
+          :container_name: dory_dnsmasq_test_name
+        :nginx_proxy:
+          :enabled: true
+          :ssl_certs_dir: #{ssl_certs_dir}
+          :container_name: #{proxy_container_name}
+        :resolv:
+          :enabled: true
+          :nameserver: 192.168.11.1
+    ).split("\n").map{|s| s.sub(' ' * 6, '')}.join("\n")
+  end
+
   let(:dory_bin) { DoryBin.new }
 
+  let(:set_macos) do
+    ->() do
+      allow(Dory::Os).to receive(:macos?){ true }
+      allow(Dory::Os).to receive(:ubuntu?){ false }
+      allow(Dory::Os).to receive(:fedora?){ false }
+      allow(Dory::Os).to receive(:arch?){ false }
+    end
+  end
+
+  let(:unset_macos) do
+    ->() do
+      allow(Dory::Os).to receive(:macos?).and_call_original
+      allow(Dory::Os).to receive(:ubuntu?).and_call_original
+      allow(Dory::Os).to receive(:fedora?).and_call_original
+      allow(Dory::Os).to receive(:arch?).and_call_original
+    end
+  end
+
+  let(:ssl_certs_dir) { '/usr/bin' }
+  let(:proxy_container_name) { 'dory_dinghy_http_proxy_test_name' }
+  let(:overridden_proxy_container_name) { 'some_container_name' }
+
   before :all do
-    File.delete(CONFIG_FILENAME) if File.exist?(CONFIG_FILENAME)
+    File.delete(config_filename) if File.exist?(config_filename)
+    `touch #{linux_resolv_filename}`
   end
 
   after :all do
-    File.delete(CONFIG_FILENAME) if File.exist?(CONFIG_FILENAME)
+    File.delete(config_filename) if File.exist?(config_filename)
   end
 
   before :each do
-    allow(Dory::Config).to receive(:filename) { CONFIG_FILENAME }
+    allow(Dory::Config).to receive(:filename) { config_filename }
+    allow(Dory::Config).to receive(:default_yaml) { default_config }
+    allow(Dory::Resolv::Macos).to receive(:resolv_files) { macos_resolv_filenames }
+    allow(Dory::Resolv::Linux).to receive(:common_resolv_file) { linux_resolv_filename }
+    allow(Dory::Resolv::Linux).to receive(:ubuntu_resolv_file) { linux_resolv_filename }
   end
 
   describe 'up' do
@@ -87,7 +150,11 @@ RSpec.describe DoryBin do
   end
 
   describe 'status' do
-
+    it 'doesnt crash' do
+      expect{capture_stdout{dory_bin.status}}.not_to raise_error
+      expect{capture_stdout{dory_bin.up}}.not_to raise_error
+      expect{capture_stdout{dory_bin.status}}.not_to raise_error
+    end
   end
 
   describe 'config file' do
@@ -116,12 +183,12 @@ RSpec.describe DoryBin do
 
     context 'upgrades' do
       before :each do
-        File.write(CONFIG_FILENAME, old_config)
+        File.write(config_filename, old_config)
         run_with('config-file', '--upgrade')
       end
 
       it 'converts symbol keys to strings' do
-        yaml = YAML.load_file(CONFIG_FILENAME)
+        yaml = YAML.load_file(config_filename)
         yaml.each_key do |k|
           expect(k).to be_a(String)
           yaml[k].each_key{ |ck| expect(ck).to be_a(String) }
@@ -129,7 +196,7 @@ RSpec.describe DoryBin do
       end
 
       it 'moves domain and address into array' do
-        yaml = YAML.load_file(CONFIG_FILENAME).with_indifferent_access
+        yaml = YAML.load_file(config_filename).with_indifferent_access
         expect(yaml[:dory][:dnsmasq][:domain]).to be_nil
         expect(yaml[:dory][:dnsmasq][:address]).to be_nil
         expect(yaml[:dory][:dnsmasq][:domains].length).to eq(1)

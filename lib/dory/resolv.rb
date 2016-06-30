@@ -23,6 +23,10 @@ module Dory
       self.get_module.configure
     end
 
+    def self.file_nameserver_line
+      self.get_module.file_nameserver_line
+    end
+
     def self.clean
       self.get_module.clean
     end

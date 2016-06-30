@@ -1,7 +1,7 @@
 RSpec.describe Dory::Resolv do
   let(:modules) { [Dory::Resolv::Linux, Dory::Resolv::Macos] }
   let(:methods) do
-    %i[has_our_nameserver? configure clean]
+    %i[has_our_nameserver? configure clean file_nameserver_line]
   end
 
   it 'calls the versions based on platform' do
