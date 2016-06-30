@@ -6,6 +6,10 @@ module Dory
 
     @@first_attempt_failed = false
 
+    def self.dnsmasq_image_name
+      'freedomben/dory-dnsmasq:1.1.0'
+    end
+
     def self.run_preconditions
       puts "[DEBUG] dnsmasq service running preconditions" if Dory::Config.debug?
 
@@ -44,10 +48,6 @@ module Dory
 
     def self.sanitize_port(port)
       port.to_s.gsub(/\D/, '').to_i
-    end
-
-    def self.dnsmasq_image_name
-      'freedomben/dory-dnsmasq:1.1.0'
     end
 
     def self.container_name
