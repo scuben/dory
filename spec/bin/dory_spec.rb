@@ -76,13 +76,15 @@ RSpec.describe DoryBin do
 
   let(:set_docker_installed) do
     ->(installed) do
-      allow(Dory::Sh).to receive(:docker_installed?) { installed }
+      allow(Dory::Dnsmasq).to receive(:docker_installed?) { installed }
+      allow(Dory::Proxy).to receive(:docker_installed?) { installed }
     end
   end
 
   let(:restore_docker_installed) do
     ->() do
-      allow(Dory::Sh).to receive(:docker_installed?).and_call_original
+      allow(Dory::Dnsmasq).to receive(:docker_installed?).and_call_original
+      allow(Dory::Proxy).to receive(:docker_installed?).and_call_original
     end
   end
 
@@ -313,12 +315,11 @@ RSpec.describe DoryBin do
   end
 
   context "doesn't crash when docker is not installed" do
-    before(:all) { set_docker_installed.call(false) }
-    after(:all) { restore_docker_installed.call }
-
-    %w[status start stop restart version].each do |method|
+    %w[status up down restart version].each do |method|
       it " - #{method}" do
+        set_docker_installed.call(false)
         expect{capture_stdout{dory_bin.send(method)}}.not_to raise_error
+        restore_docker_installed.call
       end
     end
   end
