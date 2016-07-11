@@ -2,6 +2,10 @@ require 'shellwords'
 
 module Dory
   module DockerService
+    def docker_installed?
+      Sh.run_command('which docker').success?
+    end
+
     def run_preconditions
       # Override if preconditions are needed
       return true
@@ -18,28 +22,35 @@ module Dory
           puts "[DEBUG] Container '#{self.container_name}' is already running. Doing nothing"
         end
       else
-        self.run_preconditions
-        if self.container_exists?
-          puts "[DEBUG] Container '#{self.container_name}' exists.  Deleting" if Dory::Config.debug?
-          self.delete
-        end
-        if Dory::Config.debug?
-          puts "[DEBUG] '#{self.container_name} does not exist.  Creating/starting " \
-               "'#{self.container_name}' with '#{self.run_command}'"
-        end
-        status = Sh.run_command(self.run_command)
-        unless status.success?
-          if !handle_error || !self.handle_error(status)
-            raise RuntimeError.new(
-              "Failed to run #{self.container_name}.  Command #{self.run_command} failed"
-            )
+        if docker_installed?
+          self.run_preconditions
+          if self.container_exists?
+            puts "[DEBUG] Container '#{self.container_name}' exists.  Deleting" if Dory::Config.debug?
+            self.delete
           end
+          if Dory::Config.debug?
+            puts "[DEBUG] '#{self.container_name}' does not exist.  Creating/starting " \
+                 "'#{self.container_name}' with '#{self.run_command}'"
+          end
+          status = Sh.run_command(self.run_command)
+          unless status.success?
+            if !handle_error || !self.handle_error(status)
+              puts "Failed to start docker container '#{self.container_name}' " \
+                   ".  Command '#{self.run_command}' failed".red
+            end
+          end
+        else
+          err_msg = "Docker does not appear to be installed /o\\\n" \
+            "Docker is required for DNS and Nginx proxy.  These can be " \
+            "disabled in the config file if you don't need them."
+          puts err_msg.red
         end
       end
       self.running?
     end
 
     def running?(container_name = self.container_name)
+      return false unless docker_installed?
       !!(self.ps =~ /#{container_name}/)
     end
 
