@@ -74,6 +74,18 @@ RSpec.describe DoryBin do
     end
   end
 
+  let(:set_docker_installed) do
+    ->(installed) do
+      allow(Dory::Sh).to receive(:docker_installed?) { installed }
+    end
+  end
+
+  let(:restore_docker_installed) do
+    ->() do
+      allow(Dory::Sh).to receive(:docker_installed?).and_call_original
+    end
+  end
+
   let(:ssl_certs_dir) { '/usr/bin' }
   let(:overridden_proxy_container_name) { 'some_container_name' }
 
@@ -247,7 +259,7 @@ RSpec.describe DoryBin do
     end
   end
 
-  describe 'specifcation of services' do
+  describe 'specification of services' do
     context 'sanitization' do
       it 'defaults to all services if none are specified' do
         expect(dory_bin.send(:sanitize_services, [])).to eq(dory_bin.send(:valid_services))
@@ -296,6 +308,17 @@ RSpec.describe DoryBin do
         'world' => false
       }.each do |input, valid|
         expect(dory_bin.send(:valid_service?, input)). to eq(valid)
+      end
+    end
+  end
+
+  context "doesn't crash when docker is not installed" do
+    before(:all) { set_docker_installed.call(false) }
+    after(:all) { restore_docker_installed.call }
+
+    %w[status start stop restart version].each do |method|
+      it " - #{method}" do
+        expect{capture_stdout{dory_bin.send(method)}}.not_to raise_error
       end
     end
   end
