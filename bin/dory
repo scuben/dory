@@ -108,7 +108,7 @@ class DoryBin < Thor
 
     > $ dory attach [proxy] [dns]
   LONGDESC
-  def attach(service)
+  def attach(service = nil)
     exec_attach(service, options)
   end
 
@@ -124,6 +124,14 @@ class DoryBin < Thor
             nil
           end
     if mod
+      unless mod.running?
+        puts "Service '#{service}' is not running.  Starting...".green
+        if mod.start
+          puts "Service '#{service}' successfully started.".green
+        else
+          puts "Error starting service '#{service}'".red
+        end
+      end
       if mod.running?
         puts "Note that if you Ctrl + C after attaching,".yellow
         puts "the service will need to be restarted.".yellow
