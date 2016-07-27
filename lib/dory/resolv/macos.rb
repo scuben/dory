@@ -64,7 +64,7 @@ module Dory
 
       def self.clean
         self.resolv_files.each do |filename|
-          puts "Requesting sudo to delete '#{filename}'"
+          puts "Requesting sudo to delete '#{filename}'".green
           Bash.run_command("sudo rm -f #{filename}")
         end
       end
