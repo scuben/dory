@@ -26,6 +26,20 @@ your local domain to the nginx proxy
 gem install dory
 ```
 
+## Quick Start
+
+In most cases, the default configuration will be all you need.  You literally
+just [set the VIRTUAL_HOST environment variable in your container](#making-your-containers-accessible-by-name-dns),
+[install dory](#installation) and then run:
+
+    dory up
+
+If you want to fine-tune, generate a config file with:
+
+    dory config-file
+
+and edit away at `~/.dory.yml`
+
 ## Usage
 
 Dory has a small selection of commands that are hopefully intuitive.
