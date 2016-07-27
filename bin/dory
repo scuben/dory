@@ -90,6 +90,8 @@ class DoryBin < Thor
     Writes a dory config file to #{Dory::Config.filename}
     containing the default settings.  This can then be configured
     as preferred.
+
+    > $ dory config-file [--upgrade] [--force]
   LONGDESC
   option :upgrade, type: :boolean, aliases: 'u', default: false
   option :force, type: :boolean, aliases: 'f', default: false
@@ -97,7 +99,44 @@ class DoryBin < Thor
     exec_config_file(options)
   end
 
+  desc 'attach', 'Attach to the output of a docker service container'
+  long_desc <<-LONGDESC
+    For the nginx proxy and dnsmasq containers, this command
+    provides a pass-through to the underlying docker attach command.
+    It is simply more convenient than looking up the docker
+    container name and using the equivalent 'docker attach'
+
+    > $ dory attach [proxy] [dns]
+  LONGDESC
+  def attach(service)
+    exec_attach(service, options)
+  end
+
   private
+
+  def exec_attach(service, _options)
+    s = sanitize_service(service)
+    mod = if s == 'proxy'
+            Dory::Proxy
+          elsif s == 'dns'
+            Dory::Dnsmasq
+          else
+            nil
+          end
+    if mod
+      if mod.running?
+        puts "Note that if you Ctrl + C after attaching,".yellow
+        puts "the service will need to be restarted.".yellow
+        puts "Service '#{service}' is running.".green
+        puts "Attaching to docker container '#{mod.container_name}'...".green
+        exec("docker attach #{mod.container_name}")
+      else
+        puts "Service '#{service}' is not running.  Cannot attach".red
+      end
+    else
+      puts "Can only attach to 'proxy' or 'dns'".red
+    end
+  end
 
   def exec_upgrade(_options)
     puts "Checking if dory has updates available...".green
@@ -355,6 +394,12 @@ class DoryBin < Thor
         false
       end
     end
+  end
+
+  def sanitize_service(service)
+    return false if service.nil? || service.empty?
+    return false unless valid_service?(service)
+    canonical_service(service)
   end
 
   def sanitize_services(services)
