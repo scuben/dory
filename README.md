@@ -3,11 +3,11 @@
 [![Gem Version](https://badge.fury.io/rb/dory.svg)](https://badge.fury.io/rb/dory) [![Build Status](https://travis-ci.org/FreedomBen/dory.svg?branch=master)](https://travis-ci.org/FreedomBen/dory) [![Code Climate](https://codeclimate.com/github/FreedomBen/dory/badges/gpa.svg)](https://codeclimate.com/github/FreedomBen/dory) [![Test Coverage](https://codeclimate.com/github/FreedomBen/dory/badges/coverage.svg)](https://codeclimate.com/github/FreedomBen/dory/coverage) [![Dependency Status](https://gemnasium.com/badges/github.com/FreedomBen/dory.svg)](https://gemnasium.com/github.com/FreedomBen/dory) [![Dependency Status](https://dependencyci.com/github/FreedomBen/dory/badge)](https://dependencyci.com/github/FreedomBen/dory)
 
 [Dory](https://github.com/FreedomBen/dory) let's you forget about IP addresses and port numbers
-while you are developing you application.  Through the magic of local DNS services and nginx
-reverse proxy, you can access your app at the domain of your choosing.  For example,
+while you are developing your application.  Through the magic of local DNS and
+a reverse proxy, you can access your app at the domain of your choosing.  For example,
 http://myapp.docker or http://this-is-a-really-long-name.but-its-cool-cause-i-like-it
 
-Now with (alpha) support for Docker for Mac!
+Now with support for Docker for Mac!
 
 Dory wraps [codekitchen/dinghy-http-proxy](https://github.com/codekitchen/dinghy-http-proxy)
 and makes it easily available for use outside of [dinghy](https://github.com/codekitchen/dinghy).
@@ -34,12 +34,14 @@ To customize and fine-tune dory's behavior, it can be configured with a yaml con
 ### Commands
 ```
 Commands:
+  dory attach          # Attach to the output of a docker service container
   dory config-file     # Write a default config file
   dory down            # Stop all dory services
   dory help [COMMAND]  # Describe available commands or one specific command
   dory restart         # Stop and restart all dory services
   dory status          # Report status of the dory services
   dory up              # Bring up dory services (nginx-proxy, dnsmasq, resolv)
+  dory upgrade         # Upgrade dory to the latest version
   dory version         # Check current installed version of dory
 
 Options:
