@@ -112,7 +112,46 @@ class DoryBin < Thor
     exec_attach(service, options)
   end
 
+  desc 'pull', 'Pull down the docker images that dory uses'
+  long_desc <<-LONGDESC
+    This will pull down the docker images that dory uses.
+    You don't need to run this command as dory will automatically
+    pull down the images when needed if they aren't there already.
+    However, you may wish to pull down in advance, and for that
+    purpose this command is here for you.
+
+    > $ dory pull [proxy] [dns]
+  LONGDESC
+  def pull(*services)
+    exec_pull(services, options)
+  end
+
   private
+
+  def exec_pull(services, _options)
+    servs = services.empty? ? %w[proxy dns] : services
+    servs = sanitize_services(servs)
+    return unless servs
+    servs.each do |service|
+      imgname = if service == 'proxy'
+                  Dory::Proxy.dory_http_proxy_image_name
+                elsif service == 'dns'
+                  Dory::Dnsmasq.dnsmasq_image_name
+                else
+                  nil
+                end
+      if imgname
+        puts "Pulling image '#{imgname}'...".green
+        if Dory::Sh.run_command("docker pull #{imgname}").success?
+          puts "Successfully pulled image '#{imgname}'".green
+        else
+          puts "Error pulling docker image '#{imgname}'".red
+        end
+      else
+        puts "Can only pull 'proxy' or 'dns', you tried to pull '#{service}'".red
+      end
+    end
+  end
 
   def exec_attach(service, _options)
     s = sanitize_service(service)
@@ -398,7 +437,7 @@ class DoryBin < Thor
       if valid_service?(service)
         true
       else
-        puts "'#{service}' is not valid.  Must be one or more of these: #{valid_services.join(', ')}"
+        puts "'#{service}' is not valid.  Must be one or more of these: #{valid_services.join(', ')}".red
         false
       end
     end
