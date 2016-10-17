@@ -113,7 +113,8 @@ module Dory
       pids = listener_list.uniq(&:pid).map(&:pid)
       pidstr = pids.join(' and ')
       print "This interferes with Dory's dnsmasq container.  Would you like me to kill PID #{pidstr}? (Y/N): "
-      conf = answer ? answer : STDIN.gets.chomp
+      conf = answer ? answer : ENV['DORY_KILL_DNSMASQ']
+      conf = STDIN.gets.chomp unless conf
       if conf =~ /y/i
         puts "Requesting sudo to kill PID #{pidstr}"
         return Sh.run_command("sudo kill #{pids.join(' ')}").success?
