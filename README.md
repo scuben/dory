@@ -125,8 +125,8 @@ Description:
 
 To make your container(s) accessible through a domain, all you have to do is set
 a `VIRTUAL_HOST` environment variable in your container.  That's it!  (Well, and you have
-to have dory running with the correct domain set in `~/.dory.yml`).
-You can also set `VIRTUAL_PORT` to set the port to something other than 80.
+to start dory with `dory up`)
+You can also set `VIRTUAL_PORT` if you want to use something other than 80.
 
 Many people do this in their `docker-compose.yml` file:
 
@@ -139,17 +139,17 @@ services:
       - db
       - redis
     environment:
-      - VIRTUAL_HOST=myapp.docker
+      VIRTUAL_HOST: myapp.docker
   redis:
     image: redis
     environment:
-      - VIRTUAL_HOST=redis.docker
-      - VIRTUAL_PORT=6379
+      VIRTUAL_HOST: redis.docker
+      VIRTUAL_PORT: 6379
   db:
     image: postgres
     environment:
-      - VIRTUAL_HOST=postgres.docker
-      - VIRTUAL_PORT=5432
+      VIRTUAL_HOST: postgres.docker
+      VIRTUAL_PORT: 5432
 ```
 
 In the example above, you can hit the web container from the host machine with `http://myapp.docker`,
@@ -187,6 +187,8 @@ No. Well, maybe sort of, but not really.  [Dinghy](https://github.com/codekitche
 has a lot of responsibilities on OS X, most of which are not necessary on Linux since
 docker runs natively.  Something it does that can benefit linux users however, is the
 setup and management of an [nginx reverse HTTP proxy](https://www.nginx.com/resources/admin-guide/reverse-proxy/).
+For this reason, dory exists to provide this reverse proxy on Linux, along with
+accompanying dnsmasq and resolv services.
 Using full dinghy on Linux for local development doesn't really make sense to me,
 but using a reverse proxy does.  Furthermore, if you work with other devs who run
 Dinghy on OS X, you will have to massage your [docker-compose](https://docs.docker.com/compose/)
