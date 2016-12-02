@@ -20,6 +20,8 @@ Gem::Specification.new do |s|
   s.homepage    = 'https://github.com/FreedomBen/dory'
   s.license     = 'MIT'
 
+  s.required_ruby_version = '>= 2.1.0'
+
   s.executables << 'dory'
 
   s.add_runtime_dependency 'colorize', '~> 0.8'
