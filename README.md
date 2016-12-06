@@ -7,7 +7,7 @@ while you are developing your application.  Through the magic of local DNS and
 a reverse proxy, you can access your app at the domain of your choosing.  For example,
 http://myapp.docker or http://this-is-a-really-long-name.but-its-cool-cause-i-like-it
 
-Now with support for Docker for Mac!
+Now with support for Docker for Mac and even [dinghy! (more info on using with dinghy below)](#usage-with-dinghy)
 
 Dory wraps [codekitchen/dinghy-http-proxy](https://github.com/codekitchen/dinghy-http-proxy)
 and makes it easily available for use outside of [dinghy](https://github.com/codekitchen/dinghy).
@@ -70,7 +70,7 @@ Commands:
   dory version         # Check current installed version of dory
 
 Options:
-  v, [--verbose], [--no-verbose]  
+  v, [--verbose], [--no-verbose]
 ```
 
 ### Config file
@@ -170,6 +170,47 @@ You could also just run a docker container with the environment variable like th
 
 ```
 docker run -e VIRTUAL_HOST=myapp.docker  ...
+```
+
+## Usage with dinghy
+
+If you are using dinghy, but want to use dory to manage the proxy instead of dinghy's built-in stuff,
+this is now possible! (the use case for this that we ran into was multiple domain support.  For example,
+the dev wanted to have some containers accessible at something.docker and another.dev).  To accomplish this,
+you need to disable dinghy's proxy stuff (otherwise dinghy and dory will stomp on each other's resolv files):
+
+In your [`~/.dinghy/preferences.yml`](https://github.com/codekitchen/dinghy#preferences)
+file, disable the proxy:
+
+```yaml
+:preferences:
+  :proxy_disabled: true
+  ...
+```
+
+In your `~/.dory.yml` file (if it doesn't exist, [generate it with `dory config-file`](#config-file)),
+set your dnsmasq domains and their addresses to "dinghy", as well as the resolv nameserver.  Here is
+an example (with unrelated parts removed for ease of reading):
+
+```yaml
+---
+dory:
+  dnsmasq:
+    domains:
+      - domain: docker
+        address: dinghy # instead of the default 127.0.0.1
+      - domain: dev
+        address: dinghy # instead of the default 127.0.0.1
+		...
+  resolv:
+    nameserver: dinghy # instead of the default 127.0.0.1
+```
+
+If the dinghy vm gets rebooted for some reason, or otherwise changes IP addresses,
+you may need to restart dory to pickup the changes:
+
+```
+dory restart
 ```
 
 ## Troubleshooting
