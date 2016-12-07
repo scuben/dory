@@ -37,6 +37,8 @@ RSpec.describe Dory::Resolv::Macos do
       let(:specified_port) { 9999 }
       let(:explicit_port) {{ dory: { resolv: { port: specified_port }}}}
       let(:implicit_port) {{ dory: { resolv: {}}}}
+      let(:explicit_ip) {{ dory: { resolv: { nameserver: '5.5.5.5' }}}}
+      let(:dinghy_ip) {{ dory: { resolv: { nameserver: 'dinghy' }}}}
 
       it 'has a default port if one is not specified' do
         allow(Dory::Config).to receive(:settings) { explicit_port }
@@ -46,6 +48,17 @@ RSpec.describe Dory::Resolv::Macos do
       it "let's you specify a port" do
         allow(Dory::Config).to receive(:settings) { implicit_port }
         expect(Dory::Resolv::Macos.port).to eq(default_port)
+      end
+
+      it 'uses the specified nameserver' do
+        allow(Dory::Config).to receive(:settings) { explicit_ip }
+        expect(Dory::Resolv::Macos.nameserver).to eq('5.5.5.5')
+      end
+
+      it 'pulls the setting from dinghy if dinghy is specified' do
+        allow(Dory::Dinghy).to receive(:ip) { '1.1.1.1' }
+        allow(Dory::Config).to receive(:settings) { dinghy_ip }
+        expect(Dory::Resolv::Macos.nameserver).to eq('1.1.1.1')
       end
     end
 

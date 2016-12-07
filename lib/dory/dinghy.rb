@@ -9,5 +9,9 @@ module Dory
     def self.ip
       Bash.run_command("dinghy ip").stdout.chomp
     end
+
+    def self.match?(str)
+      str =~ /^:?din.?.?y:?/
+    end
   end
 end

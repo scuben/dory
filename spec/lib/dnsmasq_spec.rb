@@ -24,6 +24,20 @@ RSpec.describe Dory::Dnsmasq do
     ).split("\n").map{|s| s.sub(' ' * 6, '')}.join("\n")
   end
 
+  let(:dory_config_dinghy) do
+    %q(---
+      :dory:
+        :dnsmasq:
+          :enabled: true
+          :domains:
+            - :domain: docker_test_name
+              :address: dinghy
+            - :domain: docker_second
+              :address: dingy  # not an accident
+          :container_name: dory_dnsmasq_test_name
+    ).split("\n").map{|s| s.sub(' ' * 6, '')}.join("\n")
+  end
+
   def start_service_on_53
     puts "Requesting sudo to start an ncat listener on 53"
     `sudo echo 'Got sudo. starting ncat listener'`
@@ -112,6 +126,14 @@ RSpec.describe Dory::Dnsmasq do
     expect(Dory::Dnsmasq.domain_addr_arg_string).to eq(
       'docker_test_name 192.168.11.1 docker_second 192.168.11.2'
     )
+  end
+
+  it "slurps the ip from dinghy if set" do
+    allow(Dory::Config).to receive(:filename) { "/tmp/doesnotexist.lies" }
+    allow(Dory::Config).to receive(:default_yaml) { dory_config_dinghy }
+    allow(Dory::Dinghy).to receive(:ip) { '1.1.1.1' }
+    expect(Dory::Dnsmasq.address('dinghy')).to eq('1.1.1.1')
+    expect(Dory::Dnsmasq.domain_addr_arg_string).to match(/1\.1\.1\.1/)
   end
 
   context 'pre-existing listener on 53' do

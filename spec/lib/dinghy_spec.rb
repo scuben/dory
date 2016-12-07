@@ -37,4 +37,15 @@ RSpec.describe Dory::Dinghy do
   it 'throws if the dinghy vm isnt running' do
 
   end
+
+  it 'matches the dinghy string' do
+    %w[
+      dinghy
+      dingy
+      dinhgy
+      dinhy
+    ].each do |str|
+      expect(Dory::Dinghy.match?(str)).to be_truthy
+    end
+  end
 end

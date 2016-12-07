@@ -31,7 +31,8 @@ module Dory
       end
 
       def self.nameserver
-        Dory::Config.settings[:dory][:resolv][:nameserver]
+        ns = Dory::Config.settings[:dory][:resolv][:nameserver]
+        Dory::Dinghy.match?(ns) ? Dory::Dinghy::ip : ns
       end
 
       def self.file_nameserver_line

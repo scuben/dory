@@ -66,12 +66,16 @@ module Dory
       Dory::Config.settings[:dory][:dnsmasq][:address]
     end
 
+    def self.address(addr)
+      Dory::Dinghy.match?(addr) ? Dory::Dinghy.ip : addr
+    end
+
     def self.domain_addr_arg_string
       if self.old_domain
-        "#{Shellwords.escape(self.old_domain)} #{Shellwords.escape(self.old_address)}"
+        "#{Shellwords.escape(self.old_domain)} #{Shellwords.escape(self.address(self.old_address))}"
       else
         self.domains.map do |domain|
-          "#{Shellwords.escape(domain[:domain])} #{Shellwords.escape(domain[:address])}"
+          "#{Shellwords.escape(domain[:domain])} #{Shellwords.escape(self.address(domain[:address]))}"
         end.join(" ")
       end
     end
