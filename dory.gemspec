@@ -30,7 +30,7 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'activesupport', '~> 4.2'
 
   s.add_development_dependency 'rspec', '~> 3.4'
-  s.add_development_dependency 'rake', '~> 11.2'
+  s.add_development_dependency 'rake', '~> 12.0'
   s.add_development_dependency 'byebug', '~> 9.0'
-  s.add_development_dependency 'codeclimate-test-reporter', '~> 0.6'
+  s.add_development_dependency 'codeclimate-test-reporter', '~> 1.0'
 end
