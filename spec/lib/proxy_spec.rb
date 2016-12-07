@@ -131,6 +131,18 @@ RSpec.describe Dory::Proxy do
         expect_not_in_cmd.call(nil)
         expect_proxy_to_start.call()
       end
+
+      it "uses the freedomben proxy image when no ssl certs are being mounted" do
+        patch_config_ssl_certs_dir.call('')
+        expect(Dory::Proxy.dory_http_proxy_image_name).to match(/^freedomben/)
+        patch_config_ssl_certs_dir.call(nil)
+        expect(Dory::Proxy.dory_http_proxy_image_name).to match(/^freedomben/)
+      end
+
+      it "uses the codekitchen proxy image when ssl certs are being mounted" do
+        patch_config_ssl_certs_dir.call('/usr/bin')
+        expect(Dory::Proxy.dory_http_proxy_image_name).to match(/^codekitchen/)
+      end
     end
   end
 end
