@@ -60,6 +60,14 @@ RSpec.describe Dory::Resolv::Macos do
         allow(Dory::Config).to receive(:settings) { dinghy_ip }
         expect(Dory::Resolv::Macos.nameserver).to eq('1.1.1.1')
       end
+
+      it 'returns false from #configure if dinghy doesnt return an IP address' do
+        allow(Dory::Bash).to receive(:run_command) do
+          OpenStruct.new({ stdout: 'Invalid operation' })
+        end
+        allow(Dory::Config).to receive(:settings) { dinghy_ip }
+        expect(Dory::Resolv.configure).to be_falsey
+      end
     end
 
     context 'dnsmasq' do
@@ -163,6 +171,8 @@ RSpec.describe Dory::Resolv::Macos do
       end
     end
 
+    let(:dinghy_ip) {{ dory: { resolv: { nameserver: 'dinghy' }}}}
+
     %w[127.0.0.1 192.168.53.164].each do |nameserver|
       %w[53 9965 1234].each do |port|
         it "does think we edited the file if 127.0.0.1 is there but the comment isn't" do
@@ -172,6 +182,45 @@ RSpec.describe Dory::Resolv::Macos do
             Dory::Resolv::Macos.contents_has_our_nameserver?(contents.call(nameserver, port))
           ).to be_truthy
         end
+      end
+    end
+
+    it 'doesnt think we edited the file if we didnt' do
+      pending 'implement me plz'
+      fail
+    end
+
+    context 'with dinghy' do
+      let(:stub_for_dinghy) do
+        ->(nameserver, port) do
+          allow(Dory::Dinghy).to receive(:ip) { nameserver }
+          allow(Dory::Config).to receive(:settings) { dinghy_ip }
+          allow(Dory::Resolv::Macos).to receive(:file_comment){ comment }
+          allow(Dory::Resolv::Macos).to receive(:port) { port }
+          expect(Dory::Resolv::Macos.nameserver).to eq(nameserver)
+        end
+      end
+
+      it 'still knows it has our nameserver if the dinghy ip address changes' do
+        pending 'we need to simulate a change in just the IP address, not the whole file'
+
+        nameserver_1 = '3.3.3.3'
+        nameserver_2 = '4.4.4.4'
+        port = 1234
+
+        stub_for_dinghy.call(nameserver_1, port)
+        expect(Dory::Resolv::Macos.nameserver).to eq(nameserver_1)
+        expect(
+          Dory::Resolv::Macos.contents_has_our_nameserver?(contents.call(nameserver_1, port))
+        ).to be_truthy
+
+        # TODO we need to simulate a change in just the IP address, not the whole file
+        fail
+        stub_for_dinghy.call(nameserver_2, port)
+        expect(Dory::Resolv::Macos.nameserver).to eq(nameserver_2)
+        expect(
+          Dory::Resolv::Macos.contents_has_our_nameserver?(contents.call(nameserver_2, port))
+        ).to be_truthy
       end
     end
   end

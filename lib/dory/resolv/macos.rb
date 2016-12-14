@@ -32,7 +32,7 @@ module Dory
 
       def self.nameserver
         ns = Dory::Config.settings[:dory][:resolv][:nameserver]
-        Dory::Dinghy.match?(ns) ? Dory::Dinghy::ip : ns
+        Dory::Dinghy.match?(ns) ? Dory::Dinghy.ip : ns
       end
 
       def self.file_nameserver_line
@@ -61,6 +61,9 @@ module Dory
           puts "Requesting sudo to write to #{filename}".green
           Bash.run_command("echo -e '#{self.resolv_contents}' | sudo tee #{Shellwords.escape(filename)} >/dev/null")
         end
+      rescue DinghyError => e
+        puts e.message.red
+        false
       end
 
       def self.clean

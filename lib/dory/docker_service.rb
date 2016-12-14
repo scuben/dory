@@ -1,4 +1,5 @@
 require 'shellwords'
+require 'ostruct'
 
 module Dory
   module DockerService
@@ -28,16 +29,20 @@ module Dory
             puts "[DEBUG] Container '#{self.container_name}' exists.  Deleting" if Dory::Config.debug?
             self.delete
           end
-          if Dory::Config.debug?
-            puts "[DEBUG] '#{self.container_name}' does not exist.  Creating/starting " \
-                 "'#{self.container_name}' with '#{self.run_command}'"
-          end
-          status = Sh.run_command(self.run_command)
-          unless status.success?
-            if !handle_error || !self.handle_error(status)
-              puts "Failed to start docker container '#{self.container_name}' " \
-                   ".  Command '#{self.run_command}' failed".red
+          begin
+            if Dory::Config.debug?
+              puts "[DEBUG] '#{self.container_name}' does not exist.  Creating/starting " \
+                   "'#{self.container_name}' with '#{self.run_command}'"
             end
+            status = Sh.run_command(self.run_command)
+            unless status.success?
+              if !handle_error || !self.handle_error(status)
+                puts "Failed to start docker container '#{self.container_name}' " \
+                     ".  Command '#{self.run_command}' failed".red
+              end
+            end
+          rescue DinghyError => e
+            puts e.message.red
           end
         else
           err_msg = "Docker does not appear to be installed /o\\\n" \
