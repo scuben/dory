@@ -129,6 +129,43 @@ RSpec.describe Dory::Resolv::Macos do
         }.from(true).to(false)
       end
     end
+
+    context 'with dinghy' do
+      let(:stub_for_dinghy) do
+        ->(nameserver, port) do
+          allow(Dory::Dinghy).to receive(:ip) { nameserver }
+          allow(Dory::Config).to receive(:settings) do
+            { dory: { resolv: { nameserver: 'dinghy', port: port }}}
+          end
+          expect(Dory::Resolv::Macos.nameserver).to eq(nameserver)
+        end
+      end
+
+      it 'still knows it has our nameserver if the dinghy ip address changes' do
+        expect(filenames.all?{|f| !File.exist?(f)}).to be_truthy
+
+        nameserver_1 = '3.3.3.3'
+        nameserver_2 = '4.4.4.4'
+        port = 1234
+        stub_for_dinghy.call(nameserver_1, port)
+        expect(Dory::Resolv::Macos.nameserver).to eq(nameserver_1)
+
+        Dory::Resolv::Macos.configure
+        expect(filenames.all? do |f|
+          File.exist?(f) && File.read(f) =~ /added.by.dory/
+        end).to be_truthy
+        expect(Dory::Resolv::Macos.nameserver).to eq(nameserver_1)
+        expect(Dory::Resolv::Macos.has_our_nameserver?).to be_truthy
+
+        stub_for_dinghy.call(nameserver_2, port)
+        expect(Dory::Resolv::Macos.nameserver).to eq(nameserver_2)
+        expect(Dory::Resolv::Macos.has_our_nameserver?).to be_truthy
+
+        filenames.each{ |filename| expect(File.exist?(filename)).to be_truthy }
+        Dory::Resolv::Macos.clean
+        filenames.each{ |filename| expect(File.exist?(filename)).to be_falsey }
+      end
+    end
   end
 
   context "Seeing system settings" do
@@ -171,8 +208,6 @@ RSpec.describe Dory::Resolv::Macos do
       end
     end
 
-    let(:dinghy_ip) {{ dory: { resolv: { nameserver: 'dinghy' }}}}
-
     %w[127.0.0.1 192.168.53.164].each do |nameserver|
       %w[53 9965 1234].each do |port|
         it "does think we edited the file if 127.0.0.1 is there but the comment isn't" do
@@ -188,40 +223,6 @@ RSpec.describe Dory::Resolv::Macos do
     it 'doesnt think we edited the file if we didnt' do
       pending 'implement me plz'
       fail
-    end
-
-    context 'with dinghy' do
-      let(:stub_for_dinghy) do
-        ->(nameserver, port) do
-          allow(Dory::Dinghy).to receive(:ip) { nameserver }
-          allow(Dory::Config).to receive(:settings) { dinghy_ip }
-          allow(Dory::Resolv::Macos).to receive(:file_comment){ comment }
-          allow(Dory::Resolv::Macos).to receive(:port) { port }
-          expect(Dory::Resolv::Macos.nameserver).to eq(nameserver)
-        end
-      end
-
-      it 'still knows it has our nameserver if the dinghy ip address changes' do
-        pending 'we need to simulate a change in just the IP address, not the whole file'
-
-        nameserver_1 = '3.3.3.3'
-        nameserver_2 = '4.4.4.4'
-        port = 1234
-
-        stub_for_dinghy.call(nameserver_1, port)
-        expect(Dory::Resolv::Macos.nameserver).to eq(nameserver_1)
-        expect(
-          Dory::Resolv::Macos.contents_has_our_nameserver?(contents.call(nameserver_1, port))
-        ).to be_truthy
-
-        # TODO we need to simulate a change in just the IP address, not the whole file
-        fail
-        stub_for_dinghy.call(nameserver_2, port)
-        expect(Dory::Resolv::Macos.nameserver).to eq(nameserver_2)
-        expect(
-          Dory::Resolv::Macos.contents_has_our_nameserver?(contents.call(nameserver_2, port))
-        ).to be_truthy
-      end
     end
   end
 end

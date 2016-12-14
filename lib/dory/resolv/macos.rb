@@ -30,6 +30,10 @@ module Dory
         self.resolv_file_names.map{ |f| "#{self.resolv_dir}/#{f}" }
       end
 
+      def self.configured_to_use_dinghy
+        Dory::Dinghy.match?(Dory::Config.settings[:dory][:resolv][:nameserver])
+      end
+
       def self.nameserver
         ns = Dory::Config.settings[:dory][:resolv][:nameserver]
         Dory::Dinghy.match?(ns) ? Dory::Dinghy.ip : ns
@@ -92,7 +96,14 @@ module Dory
       end
 
       def self.contents_has_our_nameserver?(contents)
-        !!((contents =~ /#{self.file_comment}/) && (contents =~ /#{self.file_nameserver_line}/) && (contents =~ /port.#{self.port}/))
+        comment_match = contents =~ /#{self.file_comment}/
+        port_match = contents =~ /port.#{self.port}/
+        if configured_to_use_dinghy
+          !!(comment_match && port_match)
+        else
+          nameserver_match = contents =~ /#{self.file_nameserver_line}/
+          !!(comment_match && port_match && nameserver_match)
+        end
       end
     end
   end
