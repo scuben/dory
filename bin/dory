@@ -132,6 +132,15 @@ class DoryBin < Thor
     servs = services.empty? ? %w[proxy dns] : services
     servs = sanitize_services(servs)
     return unless servs
+
+    unless Dory::DockerService.docker_installed?
+      puts "Docker does not appear to be installed /o\\".red
+      puts "Docker is required for DNS and Nginx proxy.  These can be " \
+        "disabled in the config file if you don't need them.\n".yellow
+      puts "Please install docker and try again".red
+      return
+    end
+
     servs.each do |service|
       imgname = if service == 'proxy'
                   Dory::Proxy.dory_http_proxy_image_name

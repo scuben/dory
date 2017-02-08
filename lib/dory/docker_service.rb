@@ -3,8 +3,12 @@ require 'ostruct'
 
 module Dory
   module DockerService
-    def docker_installed?
+    def self.docker_installed?
       Sh.run_command('which docker').success?
+    end
+
+    def docker_installed?
+      Dory::DockerService.docker_installed?
     end
 
     def run_preconditions
@@ -71,10 +75,6 @@ module Dory
       else
         raise RuntimeError.new("Failure running command '#{cmd}'")
       end
-    end
-
-    def has_docker_client?
-      Sh.run_command('which docker').success?
     end
 
     def stop(container_name = self.container_name)

@@ -5,6 +5,7 @@ RSpec.describe DoryBin do
     DoryBin.start(args)
   end
 
+  # This method will wrap the call and return stdout as a string.
   def capture_stdout
     begin
       old_stdout = $stdout
@@ -76,8 +77,7 @@ RSpec.describe DoryBin do
 
   let(:set_docker_installed) do
     ->(installed) do
-      allow(Dory::Dnsmasq).to receive(:docker_installed?) { installed }
-      allow(Dory::Proxy).to receive(:docker_installed?) { installed }
+      allow(Dory::DockerService).to receive(:docker_installed?) { installed }
     end
   end
 
@@ -182,6 +182,20 @@ RSpec.describe DoryBin do
       expect{capture_stdout{dory_bin.down}}.not_to raise_error
       expect{capture_stdout{dory_bin.status}}.not_to raise_error
       unset_macos.call
+    end
+  end
+
+  describe 'pull' do
+    it 'prints error message when docker is not installed' do
+      set_docker_installed.call(false)
+      expect{capture_stdout{dory_bin.pull}}.not_to raise_error
+      expect(capture_stdout{dory_bin.pull}).to match(/docker.*not.*installed/i)
+    end
+
+    it 'pulls down the images' do
+      set_docker_installed.call(true)
+      expect{capture_stdout{dory_bin.pull}}.not_to raise_error
+      expect(capture_stdout{dory_bin.pull}).to match(/pulling.image/i)
     end
   end
 
@@ -315,7 +329,7 @@ RSpec.describe DoryBin do
   end
 
   context "doesn't crash when docker is not installed" do
-    %w[status up down restart version].each do |method|
+    %w[status up down restart version pull].each do |method|
       it " - #{method}" do
         set_docker_installed.call(false)
         expect{capture_stdout{dory_bin.send(method)}}.not_to raise_error
