@@ -4,7 +4,7 @@ RSpec.describe Dory::Proxy do
   end
 
   it "has the docker client" do
-    expect(Dory::Proxy).to have_docker_client
+    expect(Dory::Proxy.docker_installed?).to be_truthy
   end
 
   it "starts up the container" do

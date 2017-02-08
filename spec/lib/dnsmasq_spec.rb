@@ -59,7 +59,7 @@ RSpec.describe Dory::Dnsmasq do
   end
 
   it "has the docker client" do
-    expect(Dory::Dnsmasq).to have_docker_client
+    expect(Dory::Dnsmasq.docker_installed?).to be_truthy
   end
 
   it "respects settings (Using defaults)" do

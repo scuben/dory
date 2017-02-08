@@ -194,8 +194,9 @@ RSpec.describe DoryBin do
 
     it 'pulls down the images' do
       set_docker_installed.call(true)
-      expect{capture_stdout{dory_bin.pull}}.not_to raise_error
-      expect(capture_stdout{dory_bin.pull}).to match(/pulling.image/i)
+      results = capture_stdout{dory_bin.pull}
+      expect(results).not_to match(/docker.*not.*installed/i)
+      expect(results).to match(/pulling.image/i)
     end
   end
 
