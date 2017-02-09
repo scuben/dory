@@ -81,8 +81,8 @@ module Dory
       # If there's a single domain and address, upgrade to the array format
       if newsettings[:dory][:dnsmasq][:domain]
         newsettings[:dory][:dnsmasq][:domains] = [{
-            domain: newsettings[:dory][:dnsmasq][:domain],
-            address: newsettings[:dory][:dnsmasq][:address] || '127.0.0.1'
+          domain: newsettings[:dory][:dnsmasq][:domain],
+          address: newsettings[:dory][:dnsmasq][:address] || '127.0.0.1'
         }]
         newsettings[:dory][:dnsmasq].delete(:domain)
         newsettings[:dory][:dnsmasq].delete(:address)

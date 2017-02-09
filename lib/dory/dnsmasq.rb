@@ -30,13 +30,14 @@ module Dory
     def self.handle_error(command_output)
       puts "[DEBUG] handling dnsmasq start error" if Dory::Config.debug?
       # If we've already tried to handle failure, prevent infinite recursion
-      if @@first_attempt_failed || !Dory::Dinghy.installed?
-        if Dory::Config.debug?
-          puts "[DEBUG] Attempt to kill conflicting service failed" if Dory
-        end
+      if @@first_attempt_failed
+        puts "[DEBUG] Attempt to kill conflicting service failed" if Dory::Config.debug?
         return false
       else
-        puts "[DEBUG] First attempt to start dnsmasq failed. There is probably a conflicting service present" if Dory::Config.debug?
+        if Dory::Config.debug?
+          puts "[DEBUG] First attempt to start dnsmasq failed." \
+               "There is probably a conflicting service present"
+        end
         @@first_attempt_failed = true
         self.start(handle_error: false)
       end
