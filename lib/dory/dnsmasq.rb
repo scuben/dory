@@ -57,7 +57,7 @@ module Dory
     end
 
     def self.ip_from_dinghy?
-      Dory::Dinghy.match?(self.address(self.old_address)) || 
+      Dory::Dinghy.match?(self.address(self.old_address)) ||
         self.domains.any?{ |domain| Dory::Dinghy.match?(self.address(domain[:address])) }
     end
 
