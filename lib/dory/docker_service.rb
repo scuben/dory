@@ -16,6 +16,11 @@ module Dory
       return true
     end
 
+    def run_postconditions
+      # Override if postconditions are needed
+      return true
+    end
+
     def handle_error(command_output)
       # Override to provide error handling
       return false

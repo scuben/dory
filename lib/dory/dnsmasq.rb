@@ -4,7 +4,11 @@ module Dory
   class Dnsmasq
     extend Dory::DockerService
 
+    #
+    # I really hate these globals.  It would be great to refactor these out
+    #
     @@first_attempt_failed = false
+    @@handle_systemd_services = false
 
     def self.dnsmasq_image_name
       'freedomben/dory-dnsmasq:1.1.0'
@@ -15,16 +19,25 @@ module Dory
 
       # we don't want to hassle the user with checking the port unless necessary
       if @@first_attempt_failed
+        @@handle_systemd_services = self.has_systemd? && self.has_services_that_block_dnsmasq?
+        self.down_systemd_services if @@handle_systemd_services
+
         puts "[DEBUG] First attempt failed.  Checking port #{self.port}" if Dory::Config.debug?
         listener_list = self.check_port(self.port)
         unless listener_list.empty?
           return self.offer_to_kill(listener_list)
         end
+
         return false
       else
         puts "[DEBUG] Skipping preconditions on first run" if Dory::Config.debug?
         return true
       end
+    end
+
+    def self.run_postconditions
+      puts "[DEBUG] dnsmasq service running postconditions" if Dory::Config.debug?
+      self.up_systemd_services if @@handle_systemd_services
     end
 
     def self.handle_error(command_output)
@@ -120,19 +133,117 @@ module Dory
 
     def self.offer_to_kill(listener_list, answer: nil)
       listener_list.each do |process|
-        puts "Process '#{process.command}' with PID '#{process.pid}' is listening on #{process.node} port #{self.port}."
+        puts "Process '#{process.command}' with PID '#{process.pid}' is listening on #{process.node} port #{self.port}.".yellow
       end
       pids = listener_list.uniq(&:pid).map(&:pid)
       pidstr = pids.join(' and ')
-      print "This interferes with Dory's dnsmasq container.  Would you like me to kill PID #{pidstr}? (Y/N): "
-      conf = answer ? answer : ENV['DORY_KILL_DNSMASQ']
+      print "This interferes with Dory's dnsmasq container.  Would you like me to kill PID #{pidstr}? (Y/N): ".yellow
+      conf = answer ? answer : answer_from_settings
       conf = STDIN.gets.chomp unless conf
       if conf =~ /y/i
-        puts "Requesting sudo to kill PID #{pidstr}"
+        puts "Requesting sudo to kill PID #{pidstr}".green
         return Sh.run_command("sudo kill #{pids.join(' ')}").success?
       else
         puts "OK, not killing PID #{pidstr}.  Please kill manually and try starting dory again.".red
         return false
+      end
+    end
+
+    def self.has_systemd?
+      Sh.run_command('which systemctl').success?
+    end
+
+    def self.systemd_service_installed?(service)
+      !(Sh.run_command("systemctl status #{service} | head -1").stdout =~ /unit.*not.*found/i)
+    end
+
+    def self.services_that_block_dnsmasq
+      %w[
+        NetworkManager.service
+        systemd-resolved.service
+      ]
+    end
+
+    def self.has_services_that_block_dnsmasq?
+      !self.enabled_services_that_block_dnsmasq.empty?
+    end
+
+    def self.enabled_services_that_block_dnsmasq
+      self.services_that_block_dnsmasq.select do |service|
+        self.systemd_service_installed?(service)
+      end
+    end
+
+    def self.down_systemd_services
+      puts "[DEBUG] Putting systemd services down" if Dory::Config.debug?
+
+      services = self.enabled_services_that_block_dnsmasq
+      conf = if ask_about_killing?
+               puts "You have some systemd services running that will race against us \n" \
+                    "to bind to port 53 (and usually they win):".yellow
+               puts "\n     #{services.join(', ')}\n".yellow
+               puts "If we don't stop these services temporarily while putting up the \n" \
+                    "dnsmasq container, starting it will likely fail.".yellow
+               print "Would you like me to put them down while we start dns \n" \
+                     "(I'll put them back up when finished)? (Y/N): ".yellow
+               STDIN.gets.chomp
+             else
+               answer_from_settings
+             end
+      @@handle_systemd_services = conf =~ /y/i
+      if @@handle_systemd_services
+        if services.all? { |service|
+          self.set_systemd_service(service: service, up: false)
+        }
+          puts "Putting down services succeeded".green
+        else
+          puts "One or more services failed to go down".red
+        end
+      else
+        puts 'OK, not putting down the services'.yellow
+      end
+    end
+
+    def self.up_systemd_services
+      if @@handle_systemd_services
+        puts "[DEBUG] Putting systemd services back up" if Dory::Config.debug?
+        services = self.enabled_services_that_block_dnsmasq
+        if services.reverse.all? { |service|
+          self.set_systemd_service(service: service, up: true)
+        }
+          puts "#{services.join(', ')} were successfully restarted".green
+        else
+          puts "#{services.join(', ')} failed to restart".red
+        end
+      else
+        puts "[DEBUG] Not putting systemd services back up cause skipped " if Dory::Config.debug?
+      end
+    end
+
+    def self.set_systemd_service(service:, up:)
+      action = up ? 'start' : 'stop'
+      puts "Requesting sudo to #{action} #{service}".green
+      Sh.run_command("sudo systemctl #{action} #{service}").success?
+    end
+
+    def self.ask_about_killing?
+      !self.answer_from_settings
+    end
+
+    def self.kill_others
+      Dory::Config.settings[:dory][:dnsmasq][:kill_others]
+    end
+
+    def self.answer_from_settings
+      # This `== true` is important because kill_others could be
+      # 'no' which would be a truthy value despite the fact that it
+      # should be falsey
+      if self.kill_others == true || self.kill_others =~ /yes/i
+        'Y'
+      elsif self.kill_others == false || self.kill_others =~ /no/i
+        'N'
+      else
+        nil
       end
     end
   end

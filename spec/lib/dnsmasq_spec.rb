@@ -10,6 +10,7 @@ RSpec.describe Dory::Dnsmasq do
             - :domain: docker_second
               :address: 192.168.11.2
           :container_name: dory_dnsmasq_test_name
+          :kill_others: false
     ).split("\n").map{|s| s.sub(' ' * 6, '')}.join("\n")
   end
 
@@ -140,8 +141,6 @@ RSpec.describe Dory::Dnsmasq do
     allow(Dory::Config).to receive(:filename) { "/tmp/doesnotexist.lies" }
     allow(Dory::Config).to receive(:default_yaml) { dory_config_dinghy }
     allow(Dory::Bash).to receive(:run_command) { OpenStruct.new(stdout: "something totally wrong\n") }
-    #require 'byebug'
-    #debugger
     expect{ Dory::Dnsmasq.address('dinghy') }.to raise_error(Dory::Dinghy::DinghyError)
     expect{ Dory::Dnsmasq.domain_addr_arg_string }.to raise_error(Dory::Dinghy::DinghyError)
   end
@@ -224,6 +223,55 @@ RSpec.describe Dory::Dnsmasq do
         stub_settings.call({ dory: { dnsmasq: { domain: 'docker', port: '999\'' }}})
         expect(Dory::Dnsmasq.port).to eq(999)
       end
+    end
+  end
+
+  context 'kill others setting' do
+    let(:stub_settings) do
+      ->(new_settings) do
+        allow(Dory::Config).to receive(:settings) { new_settings }
+      end
+    end
+
+    it '#kill_others pulls the settings out' do
+      stub_settings.call({ dory: { dnsmasq: { kill_others: 'yo' }}})
+      expect(Dory::Dnsmasq.kill_others).to eq('yo')
+    end
+
+    {
+      true => 'Y',
+      'yes' => 'Y',
+      false => 'N',
+      'no' => 'N',
+      'ask' => nil,
+      'something-wrong' => nil
+    }.each do |value, expected|
+      it "#answer_from_settings handles #{value}" do
+        stub_settings.call({ dory: { dnsmasq: { kill_others: value }}})
+        expect(Dory::Dnsmasq.answer_from_settings).to eq(expected)
+      end
+
+      it "#ask_about_killing handles #{value}" do
+        stub_settings.call({ dory: { dnsmasq: { kill_others: value }}})
+        expect(Dory::Dnsmasq.ask_about_killing?).to eq(expected == nil)
+      end
+    end
+  end
+
+  context 'smoke test' do
+    it 'runs the command (smoke test)' do
+      got_called = false
+      allow(Dory::Dnsmasq).to receive(:has_systemd?) { false }
+      allow(Dory::Dnsmasq).to receive(:delete_container_if_exists) { true }
+      allow(Dory::Dnsmasq).to receive(:run_preconditions) { true }
+      allow(Dory::Dnsmasq).to receive(:run_postconditions) { true }
+      allow(Dory::Sh).to receive(:run_command) do
+        got_called = true
+        OpenStruct.new(success?: true)
+      end
+      expect {
+        Dory::Dnsmasq.execute_run_command(handle_error: true)
+      }.to change{ got_called }.from(false).to(true)
     end
   end
 end
