@@ -63,6 +63,7 @@ Commands:
   dory config-file     # Write a default config file
   dory down            # Stop all dory services
   dory help [COMMAND]  # Describe available commands or one specific command
+  dory pull            # Pull down the docker images that dory uses
   dory restart         # Stop and restart all dory services
   dory status          # Report status of the dory services
   dory up              # Bring up dory services (nginx-proxy, dnsmasq, resolv)
@@ -75,7 +76,7 @@ Options:
 
 ### Config file
 
-Default config file which should be placed at `~/.dory.yml` (can be generated with `dory config-file`):
+A default config file (which will be placed at `~/.dory.yml`) can be generated with `dory config-file`:
 
 ```yaml
 ---
@@ -90,13 +91,19 @@ dory:
   # doesn't exist.
   dnsmasq:
     enabled: true
-    domains:              # array of domains that will be resolved to the specified address
+    domains:               # array of domains that will be resolved to the specified address
       - domain: docker     # you can set '#' for a wilcard
         address: 127.0.0.1 # return for queries against the domain
       - domain: dev
         address: 127.0.0.1
     container_name: dory_dnsmasq
     port: 53  # port to listen for dns requests on.  must be 53 on linux. can be anything that's open on macos
+    # kill_others: kill processes bound to the port we need (see previous setting 'port')
+    #   Possible values:
+    #     ask (prompt about killing each time. User can accept/reject)
+    #     yes|true (go aheand and kill without asking)
+    #     no|false (don't kill, and don't even ask)
+    kill_others: ask
   nginx_proxy:
     enabled: true
     container_name: dory_dinghy_http_proxy
@@ -232,6 +239,12 @@ NetworkManager:  `sudo service network-manager restart` or
 If you are on Mac, you can choose which port to bind the dnsmasq container to.  In your
 dory config file, adjust the setting under `dory -> dnsmasq -> port`.  You probably want
 to make `dory -> resolv -> port` match.  The default value on Mac is 19323.
+
+As of version 0.5.0, dory is a little smarter at handling this problem for you.
+dory will identify if you have systemd services running that will race for the port
+and cause issues.  It will offer to put those services down temporarily and then put
+them back up when finished.  You can configure this behavior in the [config file](#config-file)
+to achieve minimal annoyance (since you'll likely be prompted every time by default).
 
 ## Is this dinghy for Linux?
 
