@@ -144,7 +144,11 @@ Description:
 To make your container(s) accessible through a domain, all you have to do is set
 a `VIRTUAL_HOST` environment variable in your container.  That's it!  (Well, and you have
 to start dory with `dory up`)
-You can also set `VIRTUAL_PORT` if you want to use something other than 80.
+
+You will also need to set `VIRTUAL_PORT` if your server binds to something other than 80
+inside its container.  This will tell the nginx proxy which port to forward traffic to in
+your container.  When accessing the server from outside of docker, you will still hit port
+80 (such as with your web browser).
 
 Many people do this in their `docker-compose.yml` file:
 
