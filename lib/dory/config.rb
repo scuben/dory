@@ -20,14 +20,19 @@ module Dory
           # doesn't exist.
           dnsmasq:
             enabled: true
-            domains:              # array of domains that will be resolved to the specified address
+            domains:               # array of domains that will be resolved to the specified address
               - domain: docker     # you can set '#' for a wilcard
                 address: 127.0.0.1 # return for queries against the domain
               - domain: dev
                 address: 127.0.0.1
             container_name: dory_dnsmasq
             port: 53  # port to listen for dns requests on.  must be 53 on linux. can be anything that's open on macos
-            kill_others: ask  # go ahead and kill processes that are bound to the port we need.  Possible values:  ask (kill without asking), yes|true (kill without asking), no|false (don't even ask)
+            # kill_others: kill processes bound to the port we need (see previous setting 'port')
+            #   Possible values:
+            #     ask (prompt about killing each time. User can accept/reject)
+            #     yes|true (go aheand and kill without asking)
+            #     no|false (don't kill, and don't even ask)
+            kill_others: ask
           nginx_proxy:
             enabled: true
             container_name: dory_dinghy_http_proxy
