@@ -166,14 +166,14 @@ RSpec.describe Dory::Resolv::Linux do
   end
 
   context "knows if we've edited the file" do
-    let (:comment) { '# added by dory' }
+    let(:comment) { '# added by dory' }
 
-    let (:stub_resolv) do
+    let(:stub_resolv) do
       ->(nameserver, file_comment = comment) do
         allow(Dory::Resolv::Linux).to receive(:nameserver){ nameserver }
-        allow(Dory::Resolv::Linux).to receive(:file_comment){ comment }
+        allow(Dory::Resolv::Linux).to receive(:file_comment){ file_comment }
         expect(Dory::Resolv::Linux.nameserver).to eq(nameserver)
-        expect(Dory::Resolv::Linux.file_comment).to eq(comment)
+        expect(Dory::Resolv::Linux.file_comment).to eq(file_comment)
       end
     end
 

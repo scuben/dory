@@ -13,7 +13,7 @@ RSpec.describe Dory::Upgrade do
     let(:stub_sh) do
       ->(success, stdout) do
         allow(Dory::Sh).to receive(:run_command) do
-          OpenStruct.new(success?: true, stdout: stdout)
+          OpenStruct.new(success?: success, stdout: stdout)
         end
       end
     end

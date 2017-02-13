@@ -31,7 +31,7 @@ module Dory
     def self.tls_arg
       if [:tls_enabled, :ssl_enabled, :https_enabled].any? { |s|
           Dory::Config.settings[:dory][:nginx_proxy][s]
-        }
+         }
         "-p 443:443"
       else
         ''

@@ -40,7 +40,7 @@ module Dory
       self.up_systemd_services if @@handle_systemd_services
     end
 
-    def self.handle_error(command_output)
+    def self.handle_error(_command_output)
       puts "[DEBUG] handling dnsmasq start error" if Dory::Config.debug?
       # If we've already tried to handle failure, prevent infinite recursion
       if @@first_attempt_failed
@@ -101,16 +101,16 @@ module Dory
       end
     end
 
-    def self.run_command(domains = self.domains)
+    def self.run_command
       "docker run -d -p #{self.port}:#{self.port}/tcp -p #{self.port}:#{self.port}/udp " \
       "--name=#{Shellwords.escape(self.container_name)} " \
       "--cap-add=NET_ADMIN #{Shellwords.escape(self.dnsmasq_image_name)} " \
       "#{self.domain_addr_arg_string}"
     end
 
-    def self.check_port(port_num)
-      puts "Requesting sudo to check if something is bound to port #{self.port}".green
-      ret = Sh.run_command("sudo lsof -i :#{self.port}")
+    def self.check_port(port_num = self.port)
+      puts "Requesting sudo to check if something is bound to port #{port_num}".green
+      ret = Sh.run_command("sudo lsof -i :#{port_num}")
       return [] unless ret.success?
 
       list = ret.stdout.split("\n")

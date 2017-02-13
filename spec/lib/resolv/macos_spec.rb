@@ -180,18 +180,18 @@ RSpec.describe Dory::Resolv::Macos do
   end
 
   context "knows if we've edited the file" do
-    let (:comment) { '# added by dory' }
+    let(:comment) { '# added by dory' }
 
-    let (:stub_resolv) do
+    let(:stub_resolv) do
       ->(nameserver, file_comment = comment) do
         allow(Dory::Resolv::Macos).to receive(:nameserver){ nameserver }
-        allow(Dory::Resolv::Macos).to receive(:file_comment){ comment }
+        allow(Dory::Resolv::Macos).to receive(:file_comment){ file_comment }
         expect(Dory::Resolv::Macos.nameserver).to eq(nameserver)
-        expect(Dory::Resolv::Macos.file_comment).to eq(comment)
+        expect(Dory::Resolv::Macos.file_comment).to eq(file_comment)
       end
     end
 
-    let (:contents) do
+    let(:contents) do
       ->(nameserver, port) do
         <<-EOF.gsub(' ' * 10, '')
           # added by dory
@@ -201,7 +201,7 @@ RSpec.describe Dory::Resolv::Macos do
       end
     end
 
-    let (:stub_the_things) do
+    let(:stub_the_things) do
       ->(nameserver, port) do
         allow(Dory::Resolv::Macos).to receive(:file_nameserver_line) { "nameserver #{nameserver}" }
         allow(Dory::Resolv::Macos).to receive(:port) { port }

@@ -21,7 +21,7 @@ module Dory
       return true
     end
 
-    def handle_error(command_output)
+    def handle_error(_command_output)
       # Override to provide error handling
       return false
     end
