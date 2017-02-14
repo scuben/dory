@@ -261,7 +261,7 @@ RSpec.describe Dory::Dnsmasq do
   context 'smoke test' do
     it 'runs the command (smoke test)' do
       got_called = false
-      allow(Dory::Dnsmasq).to receive(:has_systemd?) { false }
+      allow(Dory::Systemd).to receive(:has_systemd?) { false }
       allow(Dory::Dnsmasq).to receive(:delete_container_if_exists) { true }
       allow(Dory::Dnsmasq).to receive(:run_preconditions) { true }
       allow(Dory::Dnsmasq).to receive(:run_postconditions) { true }
