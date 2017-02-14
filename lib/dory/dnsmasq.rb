@@ -19,11 +19,11 @@ module Dory
 
       # we don't want to hassle the user with checking the port unless necessary
       if @@first_attempt_failed
-        @@handle_systemd_services = self.has_systemd? && self.has_services_that_block_dnsmasq?
+        @@handle_systemd_services = Dory::Systemd.has_systemd? && self.has_services_that_block_dnsmasq?
         self.down_systemd_services if @@handle_systemd_services
 
         puts "[DEBUG] First attempt failed.  Checking port #{self.port}" if Dory::Config.debug?
-        listener_list = self.check_port(self.port)
+        listener_list = Dory::PortUtils.check_port(self.port)
         unless listener_list.empty?
           return self.offer_to_kill(listener_list)
         end
@@ -108,29 +108,6 @@ module Dory
       "#{self.domain_addr_arg_string}"
     end
 
-    def self.check_port(port_num = self.port)
-      puts "Requesting sudo to check if something is bound to port #{port_num}".green
-      ret = Sh.run_command("sudo lsof -i :#{port_num}")
-      return [] unless ret.success?
-
-      list = ret.stdout.split("\n")
-      list.shift  # get rid of the column headers
-      list.map! do |process|
-        command, pid, user, fd, type, device, size, node, name = process.split(/\s+/)
-        OpenStruct.new({
-          command: command,
-          pid: pid,
-          user: user,
-          fd: fd,
-          type: type,
-          device: device,
-          size: size,
-          node: node,
-          name: name
-        })
-      end
-    end
-
     def self.offer_to_kill(listener_list, answer: nil)
       listener_list.each do |process|
         puts "Process '#{process.command}' with PID '#{process.pid}' is listening on #{process.node} port #{self.port}.".yellow
@@ -149,14 +126,6 @@ module Dory
       end
     end
 
-    def self.has_systemd?
-      Sh.run_command('which systemctl').success?
-    end
-
-    def self.systemd_service_installed?(service)
-      !(Sh.run_command("systemctl status #{service} | head -1").stdout =~ /unit.*not.*found/i)
-    end
-
     def self.services_that_block_dnsmasq
       %w[
         NetworkManager.service
@@ -170,7 +139,7 @@ module Dory
 
     def self.enabled_services_that_block_dnsmasq
       self.services_that_block_dnsmasq.select do |service|
-        self.systemd_service_installed?(service)
+        Dory::Systemd.systemd_service_installed?(service)
       end
     end
 
@@ -193,7 +162,7 @@ module Dory
       @@handle_systemd_services = conf =~ /y/i
       if @@handle_systemd_services
         if services.all? { |service|
-          self.set_systemd_service(service: service, up: false)
+          Dory::Systemd.set_systemd_service(service: service, up: false)
         }
           puts "Putting down services succeeded".green
         else
@@ -209,7 +178,7 @@ module Dory
         puts "[DEBUG] Putting systemd services back up" if Dory::Config.debug?
         services = self.enabled_services_that_block_dnsmasq
         if services.reverse.all? { |service|
-          self.set_systemd_service(service: service, up: true)
+          Dory::Systemd.set_systemd_service(service: service, up: true)
         }
           puts "#{services.join(', ')} were successfully restarted".green
         else
@@ -218,12 +187,6 @@ module Dory
       else
         puts "[DEBUG] Not putting systemd services back up cause skipped " if Dory::Config.debug?
       end
-    end
-
-    def self.set_systemd_service(service:, up:)
-      action = up ? 'start' : 'stop'
-      puts "Requesting sudo to #{action} #{service}".green
-      Sh.run_command("sudo systemctl #{action} #{service}").success?
     end
 
     def self.ask_about_killing?
