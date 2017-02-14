@@ -153,11 +153,6 @@ RSpec.describe Dory::Dnsmasq do
     before(:each) { start_service_on_53 }
     after(:each) { cleanup_53 }
 
-    it "detects listening services" do
-      expect(Dory::Dnsmasq.check_port(port).count).to eq(2)
-      Dory::Dnsmasq.check_port(port).each { |p| expect(p.command).to match(/^(ncat|exe)$/) }
-    end
-
     it "kills listening services" do
       expect(Dory::Dnsmasq.check_port(port)).not_to be_empty
       expect(Dory::Dnsmasq.offer_to_kill(Dory::Dnsmasq.check_port(port), answer: 'y')).to be_truthy
