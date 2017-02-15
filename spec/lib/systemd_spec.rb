@@ -68,6 +68,10 @@ RSpec.describe Dory::Systemd do
 		EOF
 	end
 
+  let(:cups_not_installed_retval) do
+      OpenStruct.new(success?: false, exitstatus: 3, stdout: cups_not_installed)
+  end
+
   let(:cups_not_installed) do
 		<<~EOF
       ● cups.service
@@ -142,9 +146,7 @@ RSpec.describe Dory::Systemd do
 
     # we can do this without stubbing once travis is on a distro with systemd
     it 'knows cups is not installed' do
-      allow(Dory::Sh).to receive(:run_command) do
-        OpenStruct.new(success?: false, exitstatus: 3, stdout: cups_not_installed)
-      end
+      allow(Dory::Sh).to receive(:run_command) { cups_not_installed_retval }
       expect(Dory::Systemd.systemd_service_installed?('cups')).to be_falsey
     end
   end
@@ -161,6 +163,11 @@ RSpec.describe Dory::Systemd do
       allow(Dory::Sh).to receive(:run_command) do
         OpenStruct.new(success?: true, stdout: cups_enabled_not_running)
       end
+      expect(Dory::Systemd.systemd_service_running?('cups')).to be_falsey
+    end
+
+    it 'doesnt think non-installed services are running' do
+      allow(Dory::Sh).to receive(:run_command) { cups_not_installed_retval }
       expect(Dory::Systemd.systemd_service_running?('cups')).to be_falsey
     end
   end

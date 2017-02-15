@@ -8,19 +8,42 @@ module Dory
     # I really hate these globals.  It would be great to refactor these out
     #
     @@first_attempt_failed = false
-    @@handle_systemd_services = false
+    @@handle_systemd_services = []
 
     def self.dnsmasq_image_name
       'freedomben/dory-dnsmasq:1.1.0'
+    end
+
+    def self.first_attempt_failed?
+      @@first_attempt_failed ||= false if @first_attempt_failed.nil?
+      @@first_attempt_failed
+    end
+
+    def self.set_first_attempt_failed(failed)
+      @@first_attempt_failed = failed
+    end
+
+    def self.systemd_services?
+      return false unless self.systemd_services
+      self.systemd_services.count > 0
+    end
+
+    def self.systemd_services
+      @@systemd_services ||= []
+      @@systemd_services
+    end
+
+    def self.set_systemd_services(services)
+      @@systemd_services = services
     end
 
     def self.run_preconditions
       puts "[DEBUG] dnsmasq service running preconditions" if Dory::Config.debug?
 
       # we don't want to hassle the user with checking the port unless necessary
-      if @@first_attempt_failed
-        @@handle_systemd_services = Dory::Systemd.has_systemd? && self.has_services_that_block_dnsmasq?
-        self.down_systemd_services if @@handle_systemd_services
+      if first_attempt_failed?
+        self.set_systemd_services(self.running_services_that_block_dnsmasq)
+        self.down_systemd_services if self.systemd_services?
 
         puts "[DEBUG] First attempt failed.  Checking port #{self.port}" if Dory::Config.debug?
         listener_list = Dory::PortUtils.check_port(self.port)
@@ -37,13 +60,13 @@ module Dory
 
     def self.run_postconditions
       puts "[DEBUG] dnsmasq service running postconditions" if Dory::Config.debug?
-      self.up_systemd_services if @@handle_systemd_services
+      self.up_systemd_services if self.systemd_services?
     end
 
     def self.handle_error(_command_output)
       puts "[DEBUG] handling dnsmasq start error" if Dory::Config.debug?
       # If we've already tried to handle failure, prevent infinite recursion
-      if @@first_attempt_failed
+      if first_attempt_failed?
         puts "[DEBUG] Attempt to kill conflicting service failed" if Dory::Config.debug?
         return false
       else
@@ -51,7 +74,7 @@ module Dory
           puts "[DEBUG] First attempt to start dnsmasq failed." \
                "There is probably a conflicting service present"
         end
-        @@first_attempt_failed = true
+        set_first_attempt_failed(true)
         self.start(handle_error: false)
       end
     end
@@ -134,23 +157,22 @@ module Dory
     end
 
     def self.has_services_that_block_dnsmasq?
-      !self.enabled_services_that_block_dnsmasq.empty?
+      !self.running_services_that_block_dnsmasq.empty?
     end
 
-    def self.enabled_services_that_block_dnsmasq
+    def self.running_services_that_block_dnsmasq
       self.services_that_block_dnsmasq.select do |service|
-        Dory::Systemd.systemd_service_installed?(service)
+        Dory::Systemd.systemd_service_running?(service)
       end
     end
 
     def self.down_systemd_services
       puts "[DEBUG] Putting systemd services down" if Dory::Config.debug?
 
-      services = self.enabled_services_that_block_dnsmasq
       conf = if ask_about_killing?
                puts "You have some systemd services running that will race against us \n" \
                     "to bind to port 53 (and usually they win):".yellow
-               puts "\n     #{services.join(', ')}\n".yellow
+               puts "\n     #{self.systemd_services.join(', ')}\n".yellow
                puts "If we don't stop these services temporarily while putting up the \n" \
                     "dnsmasq container, starting it will likely fail.".yellow
                print "Would you like me to put them down while we start dns \n" \
@@ -159,33 +181,32 @@ module Dory
              else
                answer_from_settings
              end
-      @@handle_systemd_services = conf =~ /y/i
-      if @@handle_systemd_services
-        if services.all? { |service|
+      if conf =~ /y/i
+        if self.systemd_services.all? { |service|
           Dory::Systemd.set_systemd_service(service: service, up: false)
         }
           puts "Putting down services succeeded".green
         else
-          puts "One or more services failed to go down".red
+          puts "One or more services failed to stop".red
         end
       else
         puts 'OK, not putting down the services'.yellow
+        set_systemd_services([])
       end
     end
 
     def self.up_systemd_services
-      if @@handle_systemd_services
-        puts "[DEBUG] Putting systemd services back up" if Dory::Config.debug?
-        services = self.enabled_services_that_block_dnsmasq
-        if services.reverse.all? { |service|
+      if self.systemd_services?
+        puts "[DEBUG] Putting systemd services back up: #{self.systemd_services.join(', ')}" if Dory::Config.debug?
+        if self.systemd_services.reverse.all? { |service|
           Dory::Systemd.set_systemd_service(service: service, up: true)
         }
-          puts "#{services.join(', ')} were successfully restarted".green
+          puts "#{self.systemd_services.join(', ')} were successfully restarted".green
         else
-          puts "#{services.join(', ')} failed to restart".red
+          puts "#{self.systemd_services.join(', ')} failed to restart".red
         end
       else
-        puts "[DEBUG] Not putting systemd services back up cause skipped " if Dory::Config.debug?
+        puts "[DEBUG] Not putting systemd services back up cause array was empty " if Dory::Config.debug?
       end
     end
 

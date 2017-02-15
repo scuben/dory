@@ -154,15 +154,15 @@ RSpec.describe Dory::Dnsmasq do
     after(:each) { cleanup_53 }
 
     it "kills listening services" do
-      expect(Dory::Dnsmasq.check_port(port)).not_to be_empty
-      expect(Dory::Dnsmasq.offer_to_kill(Dory::Dnsmasq.check_port(port), answer: 'y')).to be_truthy
-      expect(Dory::Dnsmasq.check_port(port)).to be_empty
+      expect(Dory::PortUtils.check_port(port)).not_to be_empty
+      expect(Dory::Dnsmasq.offer_to_kill(Dory::PortUtils.check_port(port), answer: 'y')).to be_truthy
+      expect(Dory::PortUtils.check_port(port)).to be_empty
     end
 
     it "doesn't kill the listening services if declined" do
-      expect(Dory::Dnsmasq.check_port(port)).not_to be_empty
-      expect(Dory::Dnsmasq.offer_to_kill(Dory::Dnsmasq.check_port(port), answer: 'n')).to be_falsey
-      expect(Dory::Dnsmasq.check_port(port)).not_to be_empty
+      expect(Dory::PortUtils.check_port(port)).not_to be_empty
+      expect(Dory::Dnsmasq.offer_to_kill(Dory::PortUtils.check_port(port), answer: 'n')).to be_falsey
+      expect(Dory::PortUtils.check_port(port)).not_to be_empty
     end
   end
 
@@ -267,6 +267,45 @@ RSpec.describe Dory::Dnsmasq do
       expect {
         Dory::Dnsmasq.execute_run_command(handle_error: true)
       }.to change{ got_called }.from(false).to(true)
+    end
+  end
+
+  context 'methods that save state' do
+    context 'first attempt failed' do
+      it 'returns false if not initialized' do
+        expect(Dory::Dnsmasq.first_attempt_failed?).to eq(false)
+      end
+
+      it 'reads and writes' do
+        expect { Dory::Dnsmasq.set_first_attempt_failed(true) }.to change{
+          Dory::Dnsmasq.first_attempt_failed?
+        }.from(false).to(true)
+        expect { Dory::Dnsmasq.set_first_attempt_failed(false) }.to change{
+          Dory::Dnsmasq.first_attempt_failed?
+        }.from(true).to(false)
+      end
+    end
+
+    context 'systemd service list' do
+      let(:test_list1) { %w[a-service b-service] }
+      let(:test_list2) { %w[a-service b-service c-service] }
+
+      it 'defaults to empty array when not initialized' do
+        expect(Dory::Dnsmasq.systemd_services).to eq([])
+        expect(Dory::Dnsmasq.systemd_services?).to eq(false)
+      end
+
+      it 'reads and writes' do
+        expect { Dory::Dnsmasq.set_systemd_services(test_list1) }.to change{
+          Dory::Dnsmasq.systemd_services
+        }.from([]).to(test_list1)
+        expect { Dory::Dnsmasq.set_systemd_services(test_list2) }.to change{
+          Dory::Dnsmasq.systemd_services
+        }.from(test_list1).to(test_list2)
+        expect { Dory::Dnsmasq.set_systemd_services([]) }.to change{
+          Dory::Dnsmasq.systemd_services
+        }.from(test_list2).to([])
+      end
     end
   end
 end

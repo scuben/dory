@@ -7,14 +7,17 @@ module Dory
     end
 
     def self.systemd_service_installed?(service)
+      return false unless self.has_systemd?
       !(Sh.run_command("systemctl status #{service} | head -1").stdout =~ /not-found/)
     end
 
     def self.systemd_service_running?(service)
+      return false unless self.has_systemd?
       !!(Sh.run_command("systemctl status #{service} | head -3").stdout =~ /Active:\s+active.*running/)
     end
 
     def self.systemd_service_enabled?(service)
+      return false unless self.has_systemd?
       !!(Sh.run_command("systemctl status #{service} | head -3").stdout.gsub(/Loaded.*?;/, '') =~ /^\s*enabled;/)
     end
 
