@@ -214,13 +214,9 @@ RSpec.describe Dory::Systemd do
     let(:stub_systemd_call) do
       # on systems without systemd we have to stub this
       ->(now_running) do
-        puts 'Checking stub if needed'.blue
-        puts 'Doesnt have systemd'.blue
         if (now_running)
-          puts 'stubbing now running true'.blue
           allow(Dory::Sh).to receive(:run_command) { cups_enabled_and_running_retval }
         else
-          puts 'stubbing now running false'.blue
           allow(Dory::Sh).to receive(:run_command) { cups_enabled_not_running_retval }
         end
       end
