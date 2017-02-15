@@ -1,6 +1,6 @@
 RSpec.describe Dory::Systemd do
   let(:cups_disabled_not_running) do
-    return <<~EOF
+    return <<-EOF
       ● cups.service - CUPS Scheduler
          Loaded: loaded (/usr/lib/systemd/system/cups.service; disabled; vendor preset: enabled)
          Active: inactive (dead) since Mon 2017-02-13 15:29:13 AKST; 1min 29s ago
@@ -26,7 +26,7 @@ RSpec.describe Dory::Systemd do
   end
 
   let(:cups_enabled_not_running) do
-    <<~EOF
+    <<-EOF
       ● cups.service - CUPS Scheduler
          Loaded: loaded (/usr/lib/systemd/system/cups.service; enabled; vendor preset: enabled)
          Active: inactive (dead) since Mon 2017-02-13 15:29:13 AKST; 1s ago
@@ -52,7 +52,7 @@ RSpec.describe Dory::Systemd do
   end
 
   let(:cups_enabled_and_running) do
-    <<~EOF
+    <<-EOF
       ● cups.service - CUPS Scheduler
          Loaded: loaded (/usr/lib/systemd/system/cups.service; enabled; vendor preset: enabled)
          Active: active (running) since Fri 2017-02-10 17:38:08 AKST; 2 days ago
@@ -81,7 +81,7 @@ RSpec.describe Dory::Systemd do
   end
 
   let(:cups_not_installed) do
-    <<~EOF
+    <<-EOF
       ● cups.service
          Loaded: not-found (Reason: No such file or directory)
          Active: inactive (dead)
@@ -89,7 +89,7 @@ RSpec.describe Dory::Systemd do
   end
 
   let(:cups_disabled_and_running) do
-    <<~EOF
+    <<-EOF
       ● cups.service - CUPS Scheduler
          Loaded: loaded (/usr/lib/systemd/system/cups.service; disabled; vendor preset: enabled)
          Active: active (running) since Mon 2017-02-13 16:24:20 AKST; 19h ago
