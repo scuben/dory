@@ -211,30 +211,27 @@ RSpec.describe Dory::Systemd do
   end
 
   describe '#set_systemd_service' do
-    let(:stub_if_needed) do
+    let(:stub_systemd_call) do
       # on systems without systemd we have to stub this
       ->(now_running) do
         puts 'Checking stub if needed'.blue
-        unless Dory::Systemd.has_systemd?
-          puts 'Doesnt have systemd'.blue
-          if (now_running)
-            puts 'stubbing now running true'.blue
-            allow(Dory::Sh).to receive(:run_command) { cups_enabled_and_running_retval }
-          else
-            puts 'stubbing now running false'.blue
-            allow(Dory::Sh).to receive(:run_command) { cups_enabled_not_running_retval }
-          end
+        puts 'Doesnt have systemd'.blue
+        if (now_running)
+          puts 'stubbing now running true'.blue
+          allow(Dory::Sh).to receive(:run_command) { cups_enabled_and_running_retval }
         else
-          puts 'does have systemd.  no stubbing'.blue
+          puts 'stubbing now running false'.blue
+          allow(Dory::Sh).to receive(:run_command) { cups_enabled_not_running_retval }
         end
       end
     end
 
     it 'puts the service down' do
-      stub_if_needed.call(true)
+      do_the_stubs = Dory::Systemd.has_systemd?
+      stub_systemd_call.call(true) if do_the_stubs
       Dory::Systemd.set_systemd_service(service: 'cups', up: true)
       expect {
-        stub_if_needed.call(false)
+        stub_systemd_call.call(false) if do_the_stubs
         Dory::Systemd.set_systemd_service(service: 'cups', up: false)
       }.to change {
         Dory::Systemd.systemd_service_running?('cups')
@@ -242,10 +239,11 @@ RSpec.describe Dory::Systemd do
     end
 
     it 'brings the service up' do
-      stub_if_needed.call(false)
+      do_the_stubs = Dory::Systemd.has_systemd?
+      stub_systemd_call.call(false) if do_the_stubs
       Dory::Systemd.set_systemd_service(service: 'cups', up: false)
       expect {
-        stub_if_needed.call(true)
+        stub_systemd_call.call(true) if do_the_stubs
         Dory::Systemd.set_systemd_service(service: 'cups', up: true)
       }.to change {
         Dory::Systemd.systemd_service_running?('cups')
