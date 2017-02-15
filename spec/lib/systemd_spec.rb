@@ -227,7 +227,7 @@ RSpec.describe Dory::Systemd do
     end
 
     it 'puts the service down' do
-      do_the_stubs = Dory::Systemd.has_systemd?
+      do_the_stubs = !Dory::Systemd.has_systemd?
       stub_systemd_call.call(true) if do_the_stubs
       Dory::Systemd.set_systemd_service(service: 'cups', up: true)
       expect {
@@ -239,7 +239,7 @@ RSpec.describe Dory::Systemd do
     end
 
     it 'brings the service up' do
-      do_the_stubs = Dory::Systemd.has_systemd?
+      do_the_stubs = !Dory::Systemd.has_systemd?
       stub_systemd_call.call(false) if do_the_stubs
       Dory::Systemd.set_systemd_service(service: 'cups', up: false)
       expect {
