@@ -224,6 +224,34 @@ you may need to restart dory to pickup the changes:
 dory restart
 ```
 
+## Root privilege requirement
+
+To configure the local resolver, dory needs to edit the `/etc/resolv.conf`. Therefore you may be prompted for your `sudo` password during `dory up/restart/down`.
+If you do not want to enter your password every time you can extend the `sudoers` config as follows:
+```
+sudo visudo -f /etc/sudoers.d/dory-edit-resolv-conf
+```
+To allow passwordless execution only for a single user (replace `my-user` accordingly):
+```
+Cmnd_Alias DORY_EDIT_RESOLVCONF = /usr/bin/tee /etc/resolv.conf
+my-user ALL=(root) NOPASSWD: DORY_EDIT_RESOLVCONF
+```
+
+To allow passwordless execution for all users in group `sudo` (you can list the affected users with `awk -F':' '/sudo/{print $4}' /etc/group`):
+```
+Cmnd_Alias DORY_EDIT_RESOLVCONF = /usr/bin/tee /etc/resolv.conf
+%sudo ALL=(root) NOPASSWD: DORY_EDIT_RESOLVCONF
+```
+
+On OS X you probably need to change `%sudo` to `%admin`:
+```
+Cmnd_Alias DORY_EDIT_RESOLVCONF = /usr/bin/tee /etc/resolv.conf
+%admin ALL=(root) NOPASSWD: DORY_EDIT_RESOLVCONF
+```
+
+*Note: Changes are only applied after closing the file.*
+
+
 ## Troubleshooting
 
 *Halp the dnsmasq container is having issues starting!*
