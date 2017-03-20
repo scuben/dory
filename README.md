@@ -212,7 +212,7 @@ dory:
         address: dinghy # instead of the default 127.0.0.1
       - domain: dev
         address: dinghy # instead of the default 127.0.0.1
-		...
+    ...
   resolv:
     nameserver: dinghy # instead of the default 127.0.0.1
 ```
