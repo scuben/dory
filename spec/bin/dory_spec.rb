@@ -174,13 +174,13 @@ RSpec.describe DoryBin do
       expect{capture_stdout{dory_bin.up}}.not_to raise_error
       expect{capture_stdout{dory_bin.status}}.not_to raise_error
       expect{capture_stdout{dory_bin.down}}.not_to raise_error
-      expect{capture_stdout{dory_bin.status}}.not_to raise_error
+      expect{capture_stdout{dory_bin.ip}}.not_to raise_error
       set_macos.call
       expect{capture_stdout{dory_bin.status}}.not_to raise_error
       expect{capture_stdout{dory_bin.up}}.not_to raise_error
       expect{capture_stdout{dory_bin.status}}.not_to raise_error
       expect{capture_stdout{dory_bin.down}}.not_to raise_error
-      expect{capture_stdout{dory_bin.status}}.not_to raise_error
+      expect{capture_stdout{dory_bin.ip}}.not_to raise_error
       unset_macos.call
     end
   end
@@ -197,6 +197,14 @@ RSpec.describe DoryBin do
       results = capture_stdout{dory_bin.pull}
       expect(results).not_to match(/docker.*not.*installed/i)
       expect(results).to match(/pulling.image/i)
+    end
+  end
+
+  describe 'ip' do
+    %w[dns proxy].each do |cont|
+      it "prints the ip address of the #{cont} container" do
+        expect(capture_stdout{dory_bin.ip(cont)}).to match(/172\.\d{1,3}\.\d{1,3}\.\d{1,3}/i)
+      end
     end
   end
 

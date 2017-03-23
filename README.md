@@ -63,6 +63,7 @@ Commands:
   dory config-file     # Write a default config file
   dory down            # Stop all dory services
   dory help [COMMAND]  # Describe available commands or one specific command
+  dory ip              # Grab the IPv4 address of a running dory service
   dory pull            # Pull down the docker images that dory uses
   dory restart         # Stop and restart all dory services
   dory status          # Report status of the dory services

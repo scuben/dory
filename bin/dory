@@ -2,6 +2,7 @@
 
 require 'thor'
 require 'yaml'
+require 'json'
 
 require 'dory'
 
@@ -126,6 +127,18 @@ class DoryBin < Thor
     exec_pull(services, options)
   end
 
+  desc 'ip', 'Grab the IPv4 address of a running dory service'
+  long_desc <<-LONGDESC
+    For the nginx proxy and dnsmasq containers, this command
+    grabs the IP address of the container.  You could get this
+    info from `docker inspect` but this is more convenient.
+
+    > $ dory ip [proxy] [dns]
+  LONGDESC
+  def ip(service = nil)
+    exec_ip(service, options)
+  end
+
   private
 
   def exec_pull(services, _options)
@@ -159,6 +172,44 @@ class DoryBin < Thor
       else
         puts "Can only pull 'proxy' or 'dns', you tried to pull '#{service}'".red
       end
+    end
+  end
+
+  def exec_ip(service, _options)
+    s = sanitize_service(service)
+    mod = if s == 'proxy'
+            Dory::Proxy
+          elsif s == 'dns'
+            Dory::Dnsmasq
+          else
+            nil
+          end
+    if mod
+      unless mod.running?
+        puts "Service '#{service}' is not running.  Starting...".green
+        if mod.start
+          puts "Service '#{service}' successfully started.".green
+        else
+          puts "Error starting service '#{service}'".red
+        end
+      end
+      if mod.running?
+        inspect = Dory::Sh.run_command("docker inspect #{mod.container_name}")
+        if inspect.success?
+          begin
+            puts JSON.parse(inspect.stdout).first['NetworkSettings']['IPAddress']
+          rescue StandardError => e
+            puts "Error parsing JSON from container #{mod.container_name}:".red
+            puts e.message.red
+          end
+        else
+          puts "Error inspecting docker container #{mod.container_name}!".red
+        end
+      else
+        puts "Service '#{service}' is not running.  Cannot get IP address".red
+      end
+    else
+      puts "Can only get IP address for 'proxy' or 'dns'".red
     end
   end
 
