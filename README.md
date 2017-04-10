@@ -147,9 +147,12 @@ a `VIRTUAL_HOST` environment variable in your container.  That's it!  (Well, and
 to start dory with `dory up`)
 
 You will also need to set `VIRTUAL_PORT` if your server binds to something other than 80
-inside its container.  This will tell the nginx proxy which port to forward traffic to in
-your container.  When accessing the server from outside of docker, you will still hit port
-80 (such as with your web browser).
+inside its container (e.g. `VIRTUAL_PORT: 3000`).  This will tell the nginx proxy which
+port to forward traffic to in your container.  When accessing the server from outside
+of docker, you will still hit port 80 (such as with your web browser).
+
+If your back-end container uses HTTPS, then set `VIRTUAL_PROTO: https` to tell the nginx
+proxy to use https instead of the default http.
 
 Many people do this in their `docker-compose.yml` file:
 
@@ -227,12 +230,17 @@ dory restart
 
 ## Root privilege requirement
 
-To configure the local resolver, dory needs to edit the `/etc/resolv.conf`. Therefore you may be prompted for your `sudo` password during `dory up/restart/down`.
-If you do not want to enter your password every time you can extend the `sudoers` config as follows:
+To configure the local resolver, dory needs to edit the `/etc/resolv.conf`. Therefore
+you may be prompted for your `sudo` password during `dory up/restart/down`.
+If you do not want to enter your password every time you can extend the
+`sudoers` config as follows:
+
 ```
 sudo visudo -f /etc/sudoers.d/dory-edit-resolv-conf
 ```
+
 To allow passwordless execution only for a single user (replace `my-user` accordingly):
+
 ```
 Cmnd_Alias DORY_EDIT_RESOLVCONF = /usr/bin/tee /etc/resolv.conf
 my-user ALL=(root) NOPASSWD: DORY_EDIT_RESOLVCONF
