@@ -9,7 +9,7 @@ module Dory
       return setting if setting
       certs_dir && !certs_dir.empty? \
         ? 'codekitchen/dinghy-http-proxy:2.5.3' \
-        : 'freedomben/dory-http-proxy:2.2.0.1'
+        : 'freedomben/dory-http-proxy:2.5.5.1'
     end
 
     def self.container_name
