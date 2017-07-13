@@ -51,7 +51,7 @@ module Dory
         prev_conts = self.resolv_file_contents
         unless self.contents_has_our_nameserver?(prev_conts)
           if prev_conts =~ /nameserver/
-            prev_conts.sub!(/nameserver/, "#{self.nameserver_contents}\nnameserver")
+            prev_conts.sub!(/^\s*nameserver/, "#{self.nameserver_contents}\nnameserver")
           else
             prev_conts = "#{prev_conts}\n#{self.nameserver_contents}"
           end
