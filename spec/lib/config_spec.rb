@@ -64,6 +64,27 @@ RSpec.describe Dory::Config do
     ).split("\n").map{|s| s.sub(' ' * 6, '')}.join("\n")
   end
 
+  let(:somewhat_complete_config) do
+    %Q(
+      ---
+      :dory:
+        :dnsmasq:
+          :enabled: true
+          :domain: docker_test_name
+          :address: 192.168.11.1
+          :container_name: dory_dnsmasq_test_name
+          :service_start_delay: 9
+          :kill_others: yes
+        :nginx_proxy:
+          :enabled: true
+          :ssl_certs_dir: #{ssl_certs_dir}
+          :container_name: #{proxy_container_name}
+        :resolv:
+          :enabled: true
+          :nameserver: 192.168.11.1
+    ).split("\n").map{|s| s.sub(' ' * 6, '')}.join("\n")
+  end
+
   before :each do
     allow(Dory::Config).to receive(:filename) { filename }
     allow(Dory::Config).to receive(:default_yaml) { default_config }
@@ -125,14 +146,6 @@ RSpec.describe Dory::Config do
     expect(new_settings[:dory][:dnsmasq][:domains][0][:address]).to eq('192.168.11.1')
   end
 
-  it "adds the kill setting defaulted to 'ask'" do
-    Dory::Config.write_settings(upgradeable_config, filename, is_yaml: true)
-    Dory::Config.upgrade_settings_file(filename)
-    new_settings = Dory::Config.settings
-    expect(new_settings[:dory][:dnsmasq]).to have_key(:kill_others)
-    expect(new_settings[:dory][:dnsmasq][:kill_others]).to eq('ask')
-  end
-
   it "uses hashes with indifferent access" do
     Dory::Config.write_default_settings_file
     test_addr = "3.3.3.3"
@@ -144,5 +157,38 @@ RSpec.describe Dory::Config do
     expect(Dory::Config.settings[:dory][:dnsmasq][:domains][0][:domain]).to eq('docker_test_name')
     expect(Dory::Config.settings['dory']['dnsmasq']['domains'][0]['address']).to eq(test_addr)
     expect(Dory::Config.settings['dory']['dnsmasq']['domains'][0]['domain']).to eq('docker_test_name')
+  end
+
+  it "adds the kill setting defaulted to 'ask'" do
+    Dory::Config.write_settings(upgradeable_config, filename, is_yaml: true)
+    Dory::Config.upgrade_settings_file(filename)
+    new_settings = Dory::Config.settings
+    expect(new_settings[:dory][:dnsmasq]).to have_key(:kill_others)
+    expect(new_settings[:dory][:dnsmasq][:kill_others]).to eq('ask')
+  end
+
+  it "doesn't change kill settings if they exist" do
+    Dory::Config.write_settings(somewhat_complete_config, filename, is_yaml: true)
+    Dory::Config.upgrade_settings_file(filename)
+    new_settings = Dory::Config.settings
+    expect(new_settings[:dory][:dnsmasq]).to have_key(:kill_others)
+    pending 'YAML.load_file() read "yes" into true :-('
+    expect(new_settings[:dory][:dnsmasq][:kill_others]).to eq('yes')
+  end
+
+  it "adds service_start_delay to config" do
+    Dory::Config.write_settings(upgradeable_config, filename, is_yaml: true)
+    Dory::Config.upgrade_settings_file(filename)
+    new_settings = Dory::Config.settings
+    expect(new_settings[:dory][:dnsmasq]).to have_key(:service_start_delay)
+    expect(new_settings[:dory][:dnsmasq][:service_start_delay]).to eq(5)
+  end
+
+  it "doesn't change existing service_start_delay" do
+    Dory::Config.write_settings(somewhat_complete_config, filename, is_yaml: true)
+    Dory::Config.upgrade_settings_file(filename)
+    new_settings = Dory::Config.settings
+    expect(new_settings[:dory][:dnsmasq]).to have_key(:service_start_delay)
+    expect(new_settings[:dory][:dnsmasq][:service_start_delay]).to eq(9)
   end
 end

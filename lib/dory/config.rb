@@ -33,6 +33,7 @@ module Dory
             #     yes|true (go aheand and kill without asking)
             #     no|false (don't kill, and don't even ask)
             kill_others: ask
+            service_start_delay: 5  # seconds to wait after restarting systemd services
           nginx_proxy:
             enabled: true
             container_name: dory_dinghy_http_proxy
@@ -95,7 +96,13 @@ module Dory
       end
 
       # Add the option to skip prompts
-      newsettings[:dory][:dnsmasq][:kill_others] = 'ask'
+      unless newsettings[:dory][:dnsmasq][:kill_others]
+        newsettings[:dory][:dnsmasq][:kill_others] = 'ask'
+      end
+
+      unless newsettings[:dory][:dnsmasq][:service_start_delay]
+        newsettings[:dory][:dnsmasq][:service_start_delay] = 5
+      end
 
       newsettings
     end
