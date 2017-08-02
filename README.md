@@ -105,6 +105,7 @@ dory:
     #     yes|true (go aheand and kill without asking)
     #     no|false (don't kill, and don't even ask)
     kill_others: ask
+    service_start_delay: 5  # seconds to wait after restarting systemd services
   nginx_proxy:
     enabled: true
     container_name: dory_dinghy_http_proxy
