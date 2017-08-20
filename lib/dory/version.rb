@@ -1,4 +1,4 @@
 module Dory
-  VERSION = '0.6.2'
-  DATE    = '2016-08-02'
+  VERSION = '0.6.3'
+  DATE    = '2016-08-19'
 end
