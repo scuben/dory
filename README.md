@@ -319,7 +319,7 @@ That was actually my first approach, and I considered it quite a bit.  As I
 went through the process in my head tho, and reviewed the dinghy source code,
 I decided that it was just too heavy to really fit the need I had.  I love being
 able to run docker natively, and I revere
-[the Arch Way](https://wiki.archlinux.org/index.php/The_Arch_Way).  Dinghy just
+[the Arch Way](https://wiki.archlinux.org/index.php/Arch_Linux#Principles).  Dinghy just
 seemed like too big of a hammer for this problem (the problem being that I work
 on Linux, but my colleagues use OS X/Dinghy for docker development).
 
