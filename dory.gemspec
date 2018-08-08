@@ -25,13 +25,13 @@ Gem::Specification.new do |s|
   s.executables << 'dory'
 
   s.add_runtime_dependency 'colorize', '~> 0.8'
-  s.add_runtime_dependency 'thor', '~> 0.19'
+  s.add_runtime_dependency 'thor', '~> 0.20'
   s.add_runtime_dependency 'ptools', '~> 1.3'
-  s.add_runtime_dependency 'activesupport', '~> 4.2'
+  s.add_runtime_dependency 'activesupport', '~> 5.2'
 
-  s.add_development_dependency 'rspec', '~> 3.4'
-  s.add_development_dependency 'rake', '~> 11.2'
-  s.add_development_dependency 'byebug', '~> 9.0'
+  s.add_development_dependency 'rspec', '~> 3.8'
+  s.add_development_dependency 'rake', '~> 12.3'
+  s.add_development_dependency 'byebug', '~> 10.0'
   s.add_development_dependency 'codeclimate-test-reporter', '~> 0.6'
   s.add_development_dependency 'rubocop', '~> 0.47'
 end
