@@ -37,6 +37,8 @@ gem install dory
 A brew package is planned, and well as .deb and .rpm.  Also (eventually) a systemd service.
 If you'd like to help out with any of that, let me know!
 
+archlinux: `pacman -S ruby-dory` hosted on the [quarry repository](https://wiki.archlinux.org/index.php/Unofficial_user_repositories#quarry)
+
 ## Quick Start
 
 In most cases, the default configuration will be all you need.  You literally
