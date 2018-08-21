@@ -1,9 +1,11 @@
 require 'colorize'
+require 'pathname'
 
 module Dory
   module Resolv
     def self.get_module
       return Dory::Resolv::Macos if Os.macos?
+      return Dory::Resolv::LinuxResolvconf if self.resolvconf?
       Dory::Resolv::Linux
     end
 
@@ -21,6 +23,11 @@ module Dory
 
     def self.clean
       self.get_module.clean
+    end
+
+    def self.resolvconf?
+      Pathname.new('/etc/resolv.conf').realpath.to_s ==
+        '/run/resolvconf/resolv.conf'
     end
   end
 end
