@@ -14,13 +14,11 @@ RSpec.describe Dory::Resolv::Macos do
     ->() { allow(Dory::Resolv::Macos).to receive(:resolv_files).and_call_original }
   end
 
-  let(:set_macos) do
-    ->() do
-      allow(Dory::Os).to receive(:macos?){ true }
-      allow(Dory::Os).to receive(:ubuntu?){ false }
-      allow(Dory::Os).to receive(:fedora?){ false }
-      allow(Dory::Os).to receive(:arch?){ false }
-    end
+  let!(:set_macos) do
+    allow(Dory::Os).to receive(:macos?){ true }
+    allow(Dory::Os).to receive(:ubuntu?){ false }
+    allow(Dory::Os).to receive(:fedora?){ false }
+    allow(Dory::Os).to receive(:arch?){ false }
   end
 
   before :each do
