@@ -367,6 +367,17 @@ dory config-file
 
 Want to contribute?  Cool!  Fork it, push it, request it.  Please try to write tests for any functionality you add.
 
+## Development Quick Start
+
+1.  If you want to send a pull request with your changes, then fork the repo
+1.  Clone it:  `git clone https://github.com/FreedomBen/dory.git` or if you forked in step 1, use the URL for your fork
+1.  Make your changes
+1.  Build the gem locally:  `gem build dory.gemspec`
+1.  Now you can run your locally built version of the gem like normal:  `dory <somecommand>`
+1.  Rinse and repeat.  For easy cleaning and reinstalling, I recommend using this command, which you might want to alias:  `rm *.gem; gem clean dory; yes | gem uninstall dory; gem build dory.gemspec && gem install dory*.gem`
+1.  Run the specs locally (note that I've attempted to make the specs interfere with the running system as minimally as possible, but some things are difficult to avoid.  For example, if you have something running on port 53, the specs will kill it.  Also, you will need to enter password for sudo):  `bundle exec rspec spec/`
+1.  Specific specs can be run with:  `bundle exec rspec spec/some/file.rb
+
 ## Built on:
 
 * [jwilder/nginx-proxy](https://github.com/jwilder/nginx-proxy) (Indirectly but worthy of mention)
