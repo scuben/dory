@@ -79,7 +79,11 @@ Options:
 
 ### Config file
 
-A default config file (which will be placed at `~/.dory.yml`) can be generated with `dory config-file`:
+Dory will start looking for a config file in your current working directory, and will recurse up to `/` until it finds one.  If dory does not find a config file, it will use the default settings.
+
+You can bootstrap your config file with the default settings using `dory config-file`.  This
+file will be placed by default at `~/.dory.yml`, but again you can move it to a preferred place.  This allows you to have project-specific dory configs if you so desire by putting the config at
+`<your-project>/.dory.yml`:
 
 ```yaml
 ---
@@ -194,7 +198,7 @@ docker run -e VIRTUAL_HOST=myapp.docker  ...
 
 If you are using dinghy, but want to use dory to manage the proxy instead of dinghy's built-in stuff,
 this is now possible! (the use case for this that we ran into was multiple domain support.  For example,
-the dev wanted to have some containers accessible at something.docker and another.dev).  To accomplish this,
+the dev wanted to have some containers accessible at `something.docker` and `another.dev`).  To accomplish this,
 you need to disable dinghy's proxy stuff (otherwise dinghy and dory will stomp on each other's resolv files):
 
 In your [`~/.dinghy/preferences.yml`](https://github.com/codekitchen/dinghy#preferences)
@@ -206,8 +210,9 @@ file, disable the proxy:
   ...
 ```
 
-In your `~/.dory.yml` file (if it doesn't exist, [generate it with `dory config-file`](#config-file)),
-set your dnsmasq domains and their addresses to "dinghy", as well as the resolv nameserver.  Here is
+In your dory config file (which can be at `<your-project>/.dory.yml` or anywhere else in parent directories,
+`~/.dory.yml` being the default) (hint: if it doesn't exist, [generate it with `dory config-file`](#config-file)),
+set your dnsmasq domains and their addresses to `dinghy`, as well as the resolv nameserver.  Here is
 an example (with unrelated parts removed for ease of reading):
 
 ```yaml
