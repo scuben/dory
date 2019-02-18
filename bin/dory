@@ -60,7 +60,7 @@ class DoryBin < Thor
 
   desc 'version', 'Check current installed version of dory'
   def version
-    puts "Dory - Version: #{Dory::VERSION}"
+    puts "Dory - Version: #{Dory.version}"
   end
 
   desc 'restart', 'Stop and restart all dory services'
@@ -250,7 +250,7 @@ class DoryBin < Thor
     new_version = Dory::Upgrade.new_version
     if new_version
       if Dory::Upgrade.outdated?(new_version)
-        puts "New version #{new_version} is available.  You currently have #{Dory::VERSION}.".yellow
+        puts "New version #{new_version} is available.  You currently have #{Dory.version}.".yellow
         print "Would you like to install the update? (Y/N): ".yellow
         if STDIN.gets.chomp =~ /y/i
           puts "Upgrading dory...".green
@@ -523,7 +523,7 @@ aliases = {
 }
 
 if !ARGV.empty? && %w[-v --version].include?(ARGV.first)
-  puts "Dory - Version: #{Dory::VERSION}"
+  puts "Dory - Version: #{Dory.version}"
 else
   DoryBin.start(ARGV.map { |a| aliases.keys.include?(a) ? aliases[a] : a })
 end

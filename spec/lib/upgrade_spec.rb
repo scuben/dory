@@ -35,7 +35,7 @@ RSpec.describe Dory::Upgrade do
   end
 
   it 'knows if it is outdated' do
-    expect(Dory::Upgrade.outdated?(Dory::VERSION)).to be_falsey
+    expect(Dory::Upgrade.outdated?(Dory.version)).to be_falsey
     expect(Dory::Upgrade.outdated?('fake version')).to be_truthy
   end
 

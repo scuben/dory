@@ -5,8 +5,8 @@ require 'dory/version'
 
 Gem::Specification.new do |s|
   s.name        = 'dory'
-  s.version     = Dory::VERSION
-  s.date        = Dory::DATE
+  s.version     = Dory.version
+  s.date        = Dory.date
   s.summary     = 'Your development proxy for Docker'
   s.description = 'Dory lets you forget about IP addresses and ' \
     'port numbers while you are developing your application. ' \

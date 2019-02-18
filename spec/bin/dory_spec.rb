@@ -144,7 +144,7 @@ RSpec.describe DoryBin do
 
   describe 'version' do
     it 'answers with the version' do
-      expect(capture_stdout{dory_bin.version}).to match(/dory.*version.*#{Dory::VERSION}/i)
+      expect(capture_stdout{dory_bin.version}).to match(/dory.*version.*#{Dory.version}/i)
     end
   end
 

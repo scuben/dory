@@ -9,7 +9,7 @@ module Dory
     end
 
     def self.outdated?(new_version = self.new_version)
-      return Dory::VERSION != new_version
+      return Dory.version != new_version
     end
 
     def self.install
