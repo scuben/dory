@@ -3,4 +3,5 @@
 sudo apt-get update
 sudo apt-get -y -o Dpkg::Options::='--force-confnew' install docker.io openssl libssl-dev nmap
 
+gem install bundler
 bundle install
