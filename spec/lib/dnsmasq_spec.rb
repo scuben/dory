@@ -308,4 +308,23 @@ RSpec.describe Dory::Dnsmasq do
       end
     end
   end
+
+  context 'custom settings' do
+    let(:stub_settings) do
+      ->(new_settings) do
+        allow(Dory::Config).to receive(:settings) { new_settings }
+      end
+    end
+
+    context 'custom image' do
+      let(:default_image_name) { 'freedomben/dory-dnsmasq:1.1.0' }
+      let(:new_image_name) { 'some/awesome-image:1.0.0' }
+
+      it 'allows setting a custom image' do
+        expect(Dory::Dnsmasq.dnsmasq_image_name).to eq(default_image_name)
+        stub_settings.call({ dory: { dnsmasq: { image: new_image_name }}})
+        expect(Dory::Dnsmasq.dnsmasq_image_name).to eq(new_image_name)
+      end
+    end
+  end
 end

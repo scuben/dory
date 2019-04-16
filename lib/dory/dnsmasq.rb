@@ -11,7 +11,8 @@ module Dory
     @@handle_systemd_services = []
 
     def self.dnsmasq_image_name
-      'freedomben/dory-dnsmasq:1.1.0'
+      setting = Dory::Config.settings[:dory][:dnsmasq][:image]
+      setting ? setting : 'freedomben/dory-dnsmasq:1.1.0'
     end
 
     def self.first_attempt_failed?
