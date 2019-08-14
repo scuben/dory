@@ -149,6 +149,14 @@ RSpec.describe Dory::Config do
       expect(new_settings[:dory][:dnsmasq][:domains][0][:address]).to eq('192.168.11.1')
     end
 
+    it "adds nginx proxy port to config file in upgrade" do
+      Dory::Config.write_settings(upgradeable_config, filename, is_yaml: true)
+      Dory::Config.upgrade_settings_file(filename)
+      new_settings = Dory::Config.settings
+      expect(new_settings[:dory][:nginx_proxy][:port]).to eq(80)
+      expect(new_settings[:dory][:nginx_proxy][:tls_port]).to eq(443)
+    end
+
     it "uses hashes with indifferent access" do
       Dory::Config.write_default_settings_file
       test_addr = "3.3.3.3"

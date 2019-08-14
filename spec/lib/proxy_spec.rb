@@ -95,6 +95,49 @@ RSpec.describe Dory::Proxy do
       end
     end
 
+    context "port" do
+      let(:new_port) { 1234 }
+      let(:new_tls_port) { 4567 }
+
+      let(:patch_ports) do
+        ->(port:, tls_port:) do
+          new_config = YAML.load(Dory::Config.default_yaml)
+          new_config['dory']['nginx_proxy']['port'] = port
+          new_config['dory']['nginx_proxy']['tls_port'] = tls_port
+          expect(new_config['dory']['nginx_proxy']['port']).to eq(port)
+          expect(new_config['dory']['nginx_proxy']['tls_port']).to eq(tls_port)
+          allow(Dory::Config).to receive(:default_yaml) { new_config.to_yaml }
+          expect(Dory::Config.settings['dory']['nginx_proxy']['port']).to eq(port)
+          expect(Dory::Config.settings['dory']['nginx_proxy']['tls_port']).to eq(tls_port)
+        end
+      end
+
+      it "defaults to 80 for http" do
+        dy = YAML.load(Dory::Config.default_yaml)
+        expect(dy['dory']['nginx_proxy']['port']).to eq(80)
+        expect(dy['dory']['nginx_proxy']['tls_port']).to eq(443)
+        expect(Dory::Proxy.run_command).to match(/-p\s+80:80/)
+        expect(Dory::Proxy.run_command).to match(/-p\s+443:443/)
+      end
+
+      it "allows changing the ports" do
+        dy = YAML.load(Dory::Config.default_yaml)
+        expect(dy['dory']['nginx_proxy']['port']).to eq(80)
+        expect(dy['dory']['nginx_proxy']['tls_port']).to eq(443)
+        expect(Dory::Proxy.run_command).to match(/-p\s+80:80/)
+        expect(Dory::Proxy.run_command).to match(/-p\s+443:443/)
+
+        patch_ports.call(port: new_port, tls_port: new_tls_port)
+        dy = YAML.load(Dory::Config.default_yaml)
+        expect(dy['dory']['nginx_proxy']['port']).to eq(new_port)
+        expect(dy['dory']['nginx_proxy']['tls_port']).to eq(new_tls_port)
+        require 'byebug'; debugger
+        patch_ssl_enabled.call(true)
+        expect(Dory::Proxy.run_command).to match(/-p\s+#{new_port}:80/)
+        expect(Dory::Proxy.run_command).to match(/-p\s+#{new_tls_port}:443/)
+      end
+    end
+
     context "certs" do
       let(:patch_config_ssl_certs_dir) do
         ->(ssl_certs_dir) do

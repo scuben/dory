@@ -57,6 +57,8 @@ module Dory
             container_name: dory_dinghy_http_proxy
             https_enabled: true
             ssl_certs_dir: ''  # leave as empty string to use default certs
+            port: 80           # port 80 is default for http
+            tls_port: 443      # port 443 is default for https
           resolv:
             enabled: true
             nameserver: 127.0.0.1
@@ -120,6 +122,14 @@ module Dory
 
       unless newsettings[:dory][:dnsmasq][:service_start_delay]
         newsettings[:dory][:dnsmasq][:service_start_delay] = 5
+      end
+
+      # add settings for nginx proxy port
+      unless newsettings[:dory][:nginx_proxy][:port]
+        newsettings[:dory][:nginx_proxy][:port] = 80
+      end
+      unless newsettings[:dory][:nginx_proxy][:tls_port]
+        newsettings[:dory][:nginx_proxy][:tls_port] = 443
       end
 
       newsettings

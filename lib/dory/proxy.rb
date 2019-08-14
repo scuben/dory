@@ -32,14 +32,18 @@ module Dory
       if [:tls_enabled, :ssl_enabled, :https_enabled].any? { |s|
           Dory::Config.settings[:dory][:nginx_proxy][s]
          }
-        "-p 443:443"
+        "-p #{Dory::Config.settings[:dory][:nginx_proxy][:tls_port]}:443"
       else
         ''
       end
     end
 
+    def self.http_port
+      Dory::Config.settings[:dory][:nginx_proxy][:port]
+    end
+
     def self.run_command
-      "docker run -d -p 80:80 #{self.tls_arg} #{self.certs_arg} "\
+      "docker run -d -p #{http_port}:80 #{self.tls_arg} #{self.certs_arg} "\
         "-v /var/run/docker.sock:/tmp/docker.sock -e " \
         "'CONTAINER_NAME=#{Shellwords.escape(self.container_name)}' --name " \
         "'#{Shellwords.escape(self.container_name)}' " \
