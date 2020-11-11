@@ -386,7 +386,7 @@ Want to contribute?  Cool!  Fork it, push it, request it.  Please try to write t
 1.  Now you can run your locally built version of the gem like normal:  `dory <somecommand>`
 1.  Rinse and repeat.  For easy cleaning and reinstalling, I recommend using this command, which you might want to alias:  `rm *.gem; gem clean dory; yes | gem uninstall dory; gem build dory.gemspec && gem install dory*.gem`
 1.  Run the specs locally (note that I've attempted to make the specs interfere with the running system as minimally as possible, but some things are difficult to avoid.  For example, if you have something running on port 53, the specs will kill it.  Also, you will need to enter password for sudo):  `bundle exec rspec spec/`
-1.  Specific specs can be run with:  `bundle exec rspec spec/some/file.rb
+1.  Specific specs can be run with:  `bundle exec rspec spec/some/file.rb`
 
 ## Built on:
 
