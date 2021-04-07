@@ -1,9 +1,9 @@
 module Dory
   def self.version
-    '1.1.0'
+    '1.1.1'
   end
 
   def self.date
-    '2019-08-13'
+    '2021-04-06'
   end
 end
