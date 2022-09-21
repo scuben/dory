@@ -13,6 +13,11 @@ module Dory
   end
 
   module Bash
+    def self.escape_single_quotes(str)
+      # Using this technique here:  https://stackoverflow.com/a/1315213/2062384
+      str.gsub("'", "'\\\\''")
+    end
+
     def self.escape_double_quotes(str)
       str.gsub('"', '\\"')
     end
