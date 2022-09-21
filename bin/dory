@@ -141,6 +141,10 @@ class DoryBin < Thor
 
   private
 
+  def self.exit_on_failure?
+    true
+  end
+
   def exec_pull(services, _options)
     servs = services.empty? ? %w[proxy dns] : services
     servs = sanitize_services(servs)
