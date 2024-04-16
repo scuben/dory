@@ -28,6 +28,18 @@ module Dory
       end
     end
 
+    def self.vhosts_dir
+      Dory::Config.settings[:dory][:nginx_proxy][:vhosts_dir]
+    end
+
+    def self.vhosts_arg
+      if vhosts_dir && !vhosts_dir.empty?
+        "-v #{certs_dir}:/etc/nginx/vhost.d"
+      else
+        ''
+      end
+    end
+
     def self.tls_arg
       if [:tls_enabled, :ssl_enabled, :https_enabled].any? { |s|
           Dory::Config.settings[:dory][:nginx_proxy][s]
@@ -43,7 +55,7 @@ module Dory
     end
 
     def self.run_command
-      "docker run -d -p #{http_port}:80 #{self.tls_arg} #{self.certs_arg} "\
+      "docker run -d -p #{http_port}:80 #{self.tls_arg} #{self.certs_arg}  #{self.vhosts_arg} "\
         "-v /var/run/docker.sock:/tmp/docker.sock -e " \
         "'CONTAINER_NAME=#{Shellwords.escape(self.container_name)}' --name " \
         "'#{Shellwords.escape(self.container_name)}' " \
